@@ -30,7 +30,9 @@ Thumbs.db
 # Build
 vite.config.js.timestamp-*
 
-# Documentation & Config (all .txt and .md files except README.md)
+# Documentation & Config (all .txt and .md files except README.md and WORKING.md and FINAL_SUMMARY.md)
 *.txt
 *.md
 !README.md
+!WORKING.md
+!FINAL_SUMMARY.md
