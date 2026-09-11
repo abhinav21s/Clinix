@@ -10,41 +10,37 @@ const AppointmentPage = () => {
     minHeight: '100vh',
     backgroundColor: COLORS.background,
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: SPACING.xl,
   };
 
   const contentStyle = {
+    textAlign: 'center',
     backgroundColor: COLORS.surface,
     padding: SPACING.xxxl,
     borderRadius: '12px',
     border: `1px solid ${COLORS.border}`,
-    textAlign: 'center',
-    maxWidth: '600px',
   };
 
-  const titleStyle = {
-    fontSize: '3rem',
+  const headingStyle = {
+    fontSize: '2rem',
     fontWeight: '700',
     color: COLORS.primary,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   };
 
   const descStyle = {
-    fontSize: '1rem',
+    fontSize: '1.1rem',
     color: COLORS.textSecondary,
     marginBottom: SPACING.xl,
-    lineHeight: '1.6',
   };
 
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
-        <h1 style={titleStyle}>Appointment</h1>
+        <h1 style={headingStyle}>Appointment Booking</h1>
         <p style={descStyle}>
-          Complete appointment booking system will be implemented in Phase 3.
+          Appointment booking features coming soon.
         </p>
         <Button variant="primary" size="lg" onClick={() => navigate('/')}>
           Back to Home

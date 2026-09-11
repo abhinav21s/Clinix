@@ -1,4 +1,3 @@
-# Logs
 logs
 *.log
 npm-debug.log*
@@ -12,27 +11,23 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
 .env
 .env.local
 .env.*.local
 
-# IDE
 .vscode
 .idea
 *.suo
 *.sln
 
-# OS
 .DS_Store
 Thumbs.db
 
-# Build
 vite.config.js.timestamp-*
 
-# Documentation & Config (all .txt and .md files except README.md and WORKING.md and FINAL_SUMMARY.md)
 *.txt
 *.md
 !README.md
 !WORKING.md
-!FINAL_SUMMARY.md
+!SETUP.md
+!DEPLOYMENT_FAQ.md

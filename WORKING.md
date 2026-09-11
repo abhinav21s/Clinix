@@ -1,99 +1,122 @@
-# Aether Hospital - Working Features
+# Aether Hospital - Features
 
-## Quick Start
+## Start Commands
+
+**Backend:**
 ```bash
+cd backend
 npm run dev
-# Open http://localhost:5173
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run dev
 ```
 
 ---
 
-## Landing Page Sections
-
-### Hero Section
-- Professional heading: "Your Health, Our Priority"
-- Tagline with description
-- "Book Appointment" button (blue)
-- "Learn More" button (outlined)
-
-### Why Choose Aether Hospital - 4 Cards
-Professional icon-based cards with gradient backgrounds:
-1. **🏥 Modern Facilities** - Cutting-edge medical equipment
-2. **👨‍⚕️ Expert Doctors** - Highly qualified specialists
-3. **💙 Patient Care** - Personalized treatment plans
-4. **⏰ 24/7 Service** - Round-the-clock support
-
-### Our Services - 6 Cards
-Professional icon-based service cards:
-1. **📋 General Consultation** - Expert medical consultations
-2. **🚑 Emergency Care** - 24/7 emergency services
-3. **⚕️ Surgery** - State-of-the-art surgical procedures
-4. **👶 Pediatrics** - Specialized child care
-5. **❤️ Cardiology** - Heart and cardiovascular care
-6. **🦴 Orthopedics** - Bone, joint, and muscle disorders
-
-Each card has:
-- Professional gradient-background icon (blue)
-- Service title
-- Description text
-- Hover effect (lifts + shadow)
+## Landing Page
+- Hero section with "Book Appointment" button
+- Why Choose Us: 4 cards with features
+- Services: 6 service cards
+- Footer with contact info
+- Login button in navigation
 
 ---
 
-## Authentication & Login
+## Authentication
+- Login at `/login`
+- Email: `admin@aetherhospital.com` / `admin123`
+- Three roles: Admin, Doctor, Receptionist
+- JWT-based auth with localStorage persistence
 
-### Login Page
-- Enter any email
-- Enter any password
-- Select role: Admin / Doctor / Receptionist
-- Click Login
+---
 
-### After Login
-Redirected to role-specific dashboard:
+## Admin Dashboard (`/admin`)
+✅ **Live Stats Cards**
+- Total Doctors count
+- Total Receptionists count
+- Total Staff count
 
-**Admin Dashboard** (`/admin`)
-- Welcome message
-- 4 stats cards (Doctors, Receptionists, Appointments, Patients)
+✅ **Add Staff**
+- Name, Email, Password, Role
+- Click "+ Add Staff" button
+- Form validates all fields
+
+✅ **Edit Staff**
+- Click "Edit" button in table
+- Pre-filled form with staff data
+- Update name, email, or role
+- Click "Update Staff"
+
+✅ **Delete Staff**
+- Click "Delete" button in table
+- Confirm deletion
+- Removed from database
+
+✅ **Staff Table**
+- Shows all doctors and receptionists
+- Columns: Name, Email, Role, Status
+- Color-coded role badges
+- Action buttons (Edit, Delete)
+
+---
+
+## Doctor Dashboard (`/doctor`)
+- Simple placeholder page
 - Logout button
-
-**Doctor Dashboard** (`/doctor`)
 - "Doctor here" message
-- Logout button
 
-**Receptionist Dashboard** (`/receptionist`)
+---
+
+## Receptionist Dashboard (`/receptionist`)
+- Simple placeholder page
+- Logout button
 - "Receptionist here" message
-- Logout button
 
 ---
 
-## Security Features
-✅ Protected routes (login required)
-✅ Role-based access control
-✅ Session persistence
-✅ Logout clears session
+## Appointment Page (`/appointment`)
+- Placeholder page
+- "Back to Home" button
 
 ---
 
-## What Works When Clicked
+## Project Structure
 
-| Button | Action |
-|--------|--------|
-| "Login" (nav) | Goes to login page |
-| "Book Appointment" | Goes to appointment page |
-| "Login" (form) | Authenticates & goes to dashboard |
-| "Logout" | Logs out & goes to home |
-| Logo | Returns to home |
-
----
-
-## Test Credentials
 ```
-Email: test@hospital.com
-Password: test123
-Role: Admin (or Doctor/Receptionist)
+clinix/
+├── backend/
+│   ├── src/
+│   │   ├── index.js
+│   │   ├── db.js
+│   │   ├── schema.sql
+│   │   ├── seed.js
+│   │   ├── middleware/auth.js
+│   │   └── routes/
+│   │       ├── auth.js
+│   │       └── staff.js
+│   ├── package.json
+│   ├── .env
+│   └── .env.example
+│
+├── frontend/
+│   ├── src/
+│   │   ├── main.jsx
+│   │   ├── App.jsx
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── hooks/
+│   │   └── styles/
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   ├── .env
+│   └── .env.example
+│
+├── SETUP.md
+├── WORKING.md
+└── README.md
 ```
-
----
-
-**Status**: ✅ Phase 1 Complete | ✅ Phase 2 Complete
-**Last Updated**: September 2024

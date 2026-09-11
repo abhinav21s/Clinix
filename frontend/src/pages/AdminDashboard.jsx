@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { token, logout } = useAuth();
   const [staff, setStaff] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -34,10 +34,9 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       setStaff(data || []);
-      setLoading(false);
     } catch (err) {
-      console.error(err);
       setError('Failed to fetch staff');
+    } finally {
       setLoading(false);
     }
   };
@@ -53,7 +52,7 @@ const AdminDashboard = () => {
     }
 
     if (!editingId && !formData.password) {
-      setError('Password required for new staff');
+      setError('Password required');
       return;
     }
 
@@ -91,24 +90,29 @@ const AdminDashboard = () => {
       setShowAddForm(false);
       fetchStaff();
     } catch (err) {
-      setError(err.message || 'Failed to save staff');
+      setError(err.message);
     }
   };
 
   const handleDeleteStaff = async (id) => {
-    if (window.confirm('Are you sure you want to delete this staff member?')) {
+    if (window.confirm('Delete this staff member?')) {
       try {
         const res = await fetch(`${API_URL}/staff/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to delete');
-        setSuccess('Staff deleted successfully');
+        setSuccess('Staff deleted');
         fetchStaff();
       } catch (err) {
         setError('Failed to delete staff');
       }
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   const doctorCount = staff.filter(s => s.role === 'doctor').length;
@@ -199,7 +203,6 @@ const AdminDashboard = () => {
     borderRadius: '8px',
     fontSize: '1rem',
     fontFamily: 'inherit',
-    transition: 'border-color 0.2s',
   };
 
   const tableStyle = {
@@ -234,15 +237,10 @@ const AdminDashboard = () => {
     fontWeight: '500',
   });
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   return (
     <div style={containerStyle}>
       <nav style={navStyle}>
-        <div style={titleStyle}>🏥 Aether Hospital Admin</div>
+        <div style={titleStyle}>🏥 Admin Dashboard</div>
         <Button variant="danger" size="md" onClick={handleLogout}>
           Logout
         </Button>
@@ -252,15 +250,15 @@ const AdminDashboard = () => {
         {error && <div style={alertStyle('error')}>{error}</div>}
         {success && <div style={alertStyle('success')}>{success}</div>}
 
-        {/* Stats Section */}
+        {/* Stats */}
         <div style={statsContainerStyle}>
           <div style={statCardStyle}>
             <div style={statNumberStyle('#0066FF')}>{doctorCount}</div>
-            <div style={statLabelStyle}>Total Doctors</div>
+            <div style={statLabelStyle}>Doctors</div>
           </div>
           <div style={statCardStyle}>
             <div style={statNumberStyle('#FF6B35')}>{receptionistCount}</div>
-            <div style={statLabelStyle}>Total Receptionists</div>
+            <div style={statLabelStyle}>Receptionists</div>
           </div>
           <div style={statCardStyle}>
             <div style={statNumberStyle('#00AA55')}>{staff.length}</div>
@@ -268,7 +266,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Header with Add Button */}
+        {/* Header */}
         <div style={headerStyle}>
           <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: COLORS.textPrimary }}>
             Staff Management
@@ -280,11 +278,11 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* Add/Edit Form */}
+        {/* Form */}
         {showAddForm && (
           <form style={formStyle} onSubmit={handleAddStaff}>
-            <h3 style={{ marginBottom: SPACING.lg, color: COLORS.textPrimary, fontSize: '1.3rem' }}>
-              {editingId ? '✏️ Edit Staff' : '➕ Add New Staff'}
+            <h3 style={{ marginBottom: SPACING.lg, color: COLORS.textPrimary }}>
+              {editingId ? 'Edit Staff' : 'Add New Staff'}
             </h3>
             <div style={gridFormStyle}>
               <input
@@ -341,59 +339,48 @@ const AdminDashboard = () => {
           </form>
         )}
 
-        {/* Staff Table */}
+        {/* Table */}
         <div style={{ overflowX: 'auto' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: SPACING.xl, color: COLORS.textSecondary }}>
-              Loading staff...
-            </div>
+            <div style={{ textAlign: 'center', padding: SPACING.xl }}>Loading...</div>
           ) : (
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>👤 Name</th>
-                  <th style={thStyle}>📧 Email</th>
-                  <th style={thStyle}>👨‍⚕️ Role</th>
-                  <th style={thStyle}>✅ Status</th>
-                  <th style={thStyle}>⚙️ Actions</th>
+                  <th style={thStyle}>Name</th>
+                  <th style={thStyle}>Email</th>
+                  <th style={thStyle}>Role</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {staff.length === 0 ? (
                   <tr>
-                    <td colSpan="5" style={{ ...tdStyle, textAlign: 'center', padding: SPACING.xl, color: COLORS.textSecondary }}>
-                      No staff members yet. Click "+ Add Staff" to get started.
+                    <td colSpan="5" style={{ ...tdStyle, textAlign: 'center', color: COLORS.textSecondary }}>
+                      No staff members yet. Click "+ Add Staff".
                     </td>
                   </tr>
                 ) : (
                   staff.map((member) => (
-                    <tr key={member.id} style={{ transition: 'background-color 0.2s' }}>
-                      <td style={tdStyle}>
-                        <span style={{ fontWeight: '500' }}>{member.name}</span>
-                      </td>
+                    <tr key={member.id}>
+                      <td style={tdStyle}>{member.name}</td>
                       <td style={tdStyle}>{member.email}</td>
-                      <td style={tdStyle}>
-                        <span style={{
-                          padding: '6px 12px',
-                          borderRadius: '20px',
-                          backgroundColor: member.role === 'doctor' ? '#E3F2FD' : '#FFF3E0',
-                          color: member.role === 'doctor' ? '#1976D2' : '#F57C00',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                        }}>
-                          {member.role === 'doctor' ? '👨‍⚕️ Doctor' : '📞 Receptionist'}
-                        </span>
-                      </td>
                       <td style={tdStyle}>
                         <span style={{
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          backgroundColor: member.is_active ? '#E8F5E9' : '#FFEBEE',
-                          color: member.is_active ? '#2E7D32' : '#C62828',
-                          fontWeight: '500',
-                          fontSize: '0.9rem',
+                          backgroundColor: member.role === 'doctor' ? '#E3F2FD' : '#FFF3E0',
+                          color: member.role === 'doctor' ? '#1976D2' : '#F57C00',
                         }}>
-                          {member.is_active ? '🟢 Active' : '🔴 Inactive'}
+                          {member.role}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          color: member.is_active ? COLORS.success : COLORS.error,
+                        }}>
+                          {member.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td style={tdStyle}>
@@ -409,39 +396,29 @@ const AdminDashboard = () => {
                             setShowAddForm(true);
                           }}
                           style={{
-                            padding: '6px 14px',
                             marginRight: SPACING.sm,
-                            backgroundColor: '#2196F3',
+                            padding: '4px 8px',
+                            backgroundColor: COLORS.primary,
                             color: 'white',
                             border: 'none',
-                            borderRadius: '6px',
+                            borderRadius: '4px',
                             cursor: 'pointer',
-                            fontWeight: '500',
-                            fontSize: '0.9rem',
-                            transition: 'background-color 0.2s',
                           }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#1976D2'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = '#2196F3'}
                         >
-                          ✏️ Edit
+                          Edit
                         </button>
                         <button
                           onClick={() => handleDeleteStaff(member.id)}
                           style={{
-                            padding: '6px 14px',
-                            backgroundColor: '#F44336',
+                            padding: '4px 8px',
+                            backgroundColor: COLORS.error,
                             color: 'white',
                             border: 'none',
-                            borderRadius: '6px',
+                            borderRadius: '4px',
                             cursor: 'pointer',
-                            fontWeight: '500',
-                            fontSize: '0.9rem',
-                            transition: 'background-color 0.2s',
                           }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#D32F2F'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = '#F44336'}
                         >
-                          🗑️ Delete
+                          Delete
                         </button>
                       </td>
                     </tr>
