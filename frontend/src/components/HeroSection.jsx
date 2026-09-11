@@ -6,9 +6,9 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   const sectionStyle = {
-    backgroundColor: '#F8FAFB',
-    padding: `${SPACING.xxxl} ${SPACING.xl}`,
-    borderBottom: '1px solid #E1E8ED',
+    backgroundColor: '#FFFFFF',
+    padding: `${SPACING.xxxl * 1.5} ${SPACING.xl}`,
+    borderBottom: '1px solid #F0F4F8',
   };
 
   const containerStyle = {
@@ -17,140 +17,180 @@ const HeroSection = () => {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     alignItems: 'center',
-    gap: SPACING.xxxl,
+    gap: SPACING.xxxl * 1.5,
   };
 
-  const textStyle = {
-    flex: 1,
+  const contentStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: SPACING.xl,
   };
 
   const headingStyle = {
-    fontSize: '3.5rem',
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: SPACING.lg,
-    lineHeight: '1.2',
+    fontSize: '3.8rem',
+    fontWeight: '800',
+    color: '#0A0E27',
+    lineHeight: '1.15',
+    margin: 0,
+    fontFamily: '"Segoe UI", Roboto, sans-serif',
   };
 
   const subheadingStyle = {
-    fontSize: '1.1rem',
-    color: '#666666',
-    marginBottom: SPACING.xl,
-    lineHeight: '1.6',
+    fontSize: '1.15rem',
+    color: '#6B7280',
+    lineHeight: '1.7',
+    margin: 0,
+    fontWeight: '400',
   };
 
-  const buttonStyle = {
+  const buttonContainerStyle = {
+    display: 'flex',
+    gap: SPACING.lg,
+    alignItems: 'center',
+    marginTop: SPACING.lg,
+  };
+
+  const primaryButtonStyle = {
     backgroundColor: '#0066FF',
     color: 'white',
     border: 'none',
-    padding: `${SPACING.md} ${SPACING.xl}`,
+    padding: `${SPACING.md} ${SPACING.xxl}`,
     fontSize: '1rem',
     fontWeight: '600',
     borderRadius: '8px',
     cursor: 'pointer',
-    transition: 'background-color 0.3s',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(0, 102, 255, 0.2)',
   };
 
-  const imageStyle = {
+  const secondaryButtonStyle = {
+    backgroundColor: 'transparent',
+    color: '#0066FF',
+    border: '1.5px solid #0066FF',
+    padding: `${SPACING.md} ${SPACING.xxl}`,
+    fontSize: '1rem',
+    fontWeight: '600',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  };
+
+  const visualStyle = {
     width: '100%',
-    height: '450px',
-    backgroundColor: '#F0F7FF',
-    borderRadius: '16px',
+    height: '500px',
+    backgroundColor: '#F8FAFC',
+    borderRadius: '20px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
     overflow: 'hidden',
+    border: '1px solid #F0F4F8',
+  };
+
+  const gradientOverlay = {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(135deg, rgba(0, 102, 255, 0.05) 0%, rgba(0, 102, 255, 0.02) 100%)',
   };
 
   return (
     <section style={sectionStyle}>
       <div style={containerStyle}>
-        <div style={textStyle}>
-          <h1 style={headingStyle}>Your Health, Our Priority</h1>
+        <div style={contentStyle}>
+          <h1 style={headingStyle}>
+            Premium Healthcare,
+            <br />
+            Simply Delivered
+          </h1>
           <p style={subheadingStyle}>
-            Experience excellence in healthcare. Our world-class medical team provides comprehensive care with cutting-edge technology and compassionate service.
+            Experience world-class medical care with our team of expert specialists. We combine cutting-edge technology with compassionate service to ensure your wellbeing.
           </p>
-          <button
-            style={buttonStyle}
-            onClick={() => navigate('/appointment')}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#0052CC'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#0066FF'}
-          >
-            Book Appointment
-          </button>
+          <div style={buttonContainerStyle}>
+            <button
+              style={primaryButtonStyle}
+              onClick={() => navigate('/appointment')}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#0052CC';
+                e.target.style.boxShadow = '0 8px 25px rgba(0, 102, 255, 0.3)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#0066FF';
+                e.target.style.boxShadow = '0 4px 15px rgba(0, 102, 255, 0.2)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              Book Appointment
+            </button>
+            <button
+              style={secondaryButtonStyle}
+              onClick={() => navigate('/')}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#F0F7FF';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+              }}
+            >
+              Learn More
+            </button>
+          </div>
         </div>
 
-        <div style={imageStyle}>
-          <svg width="100%" height="100%" viewBox="0 0 500 450" xmlns="http://www.w3.org/2000/svg">
+        <div style={visualStyle}>
+          <div style={gradientOverlay}></div>
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 500 500"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ position: 'relative', zIndex: 1 }}
+          >
             <defs>
-              <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#F4A460', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#D2B48C', stopOpacity: 1 }} />
+              <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0066FF', stopOpacity: 0.1 }} />
+                <stop offset="100%" style={{ stopColor: '#0066FF', stopOpacity: 0.05 }} />
               </linearGradient>
-              <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#E3F2FD', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#F0F7FF', stopOpacity: 1 }} />
+              <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0066FF', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#0052CC', stopOpacity: 1 }} />
               </linearGradient>
             </defs>
 
-            {/* Background */}
-            <rect width="500" height="450" fill="url(#bgGrad)" />
+            {/* Abstract medical shapes */}
+            <circle cx="250" cy="250" r="180" fill="url(#blueGrad)" />
+            <circle cx="250" cy="250" r="160" fill="none" stroke="#0066FF" strokeWidth="1" opacity="0.2" />
+            <circle cx="250" cy="250" r="140" fill="none" stroke="#0066FF" strokeWidth="1" opacity="0.15" />
 
-            {/* Decorative circles */}
-            <circle cx="420" cy="80" r="60" fill="#FFE4E1" opacity="0.6" />
-            <circle cx="80" cy="380" r="50" fill="#E0F2F1" opacity="0.6" />
-            <circle cx="450" cy="350" r="40" fill="#FFF9E6" opacity="0.6" />
-
-            {/* Doctor figure - woman */}
-            <g transform="translate(180, 100)">
-              {/* Head */}
-              <circle cx="0" cy="0" r="30" fill="url(#skinGrad)" />
-              {/* Hair */}
-              <path d="M -30 -5 Q -40 -20 -25 -35 Q 0 -45 25 -35 Q 40 -20 30 -5" fill="#2C1810" />
-              {/* Eyes */}
-              <circle cx="-10" cy="-5" r="3" fill="#000" />
-              <circle cx="10" cy="-5" r="3" fill="#000" />
-              {/* Smile */}
-              <path d="M -10 8 Q 0 12 10 8" stroke="#8B4513" strokeWidth="2" fill="none" />
-              
-              {/* Body - Doctor coat */}
-              <rect x="-35" y="35" width="70" height="80" fill="#FFFFFF" stroke="#0066FF" strokeWidth="2" rx="5" />
-              {/* Stethoscope */}
-              <path d="M -20 50 Q -25 70 -15 75" stroke="#FF6B6B" strokeWidth="3" fill="none" />
-              <path d="M 20 50 Q 25 70 15 75" stroke="#FF6B6B" strokeWidth="3" fill="none" />
-              <circle cx="0" cy="82" r="8" fill="#FF6B6B" />
-              
-              {/* Arms */}
-              <rect x="-50" y="40" width="15" height="60" fill="url(#skinGrad)" rx="7" />
-              <rect x="35" y="40" width="15" height="60" fill="url(#skinGrad)" rx="7" />
+            {/* Central medical icon - Heartbeat */}
+            <g transform="translate(250, 250)">
+              {/* Heart shape */}
+              <path
+                d="M 0 -8 C -10 -18 -25 -18 -25 -8 C -25 5 0 25 0 25 C 0 25 25 5 25 -8 C 25 -18 10 -18 0 -8"
+                fill="#0066FF"
+                opacity="0.8"
+              />
             </g>
 
-            {/* Clipboard/Medical chart */}
-            <g transform="translate(320, 150)">
-              <rect x="0" y="0" width="80" height="120" fill="#FFFFFF" stroke="#0066FF" strokeWidth="2" rx="4" />
-              <rect x="5" y="5" width="70" height="15" fill="#0066FF" />
-              <line x1="10" y1="30" x2="65" y2="30" stroke="#CCCCCC" strokeWidth="1" />
-              <line x1="10" y1="40" x2="55" y2="40" stroke="#CCCCCC" strokeWidth="1" />
-              <line x1="10" y1="50" x2="60" y2="50" stroke="#CCCCCC" strokeWidth="1" />
-              <line x1="10" y1="60" x2="50" y2="60" stroke="#CCCCCC" strokeWidth="1" />
-              <circle cx="35" cy="85" r="8" fill="#FF6B6B" />
+            {/* Top right accent */}
+            <rect x="350" y="80" width="120" height="120" fill="none" stroke="#0066FF" strokeWidth="2" opacity="0.1" rx="12" />
+
+            {/* Bottom left accent */}
+            <circle cx="100" cy="380" r="60" fill="none" stroke="#0066FF" strokeWidth="2" opacity="0.1" />
+
+            {/* Pulse dots */}
+            <g opacity="0.6">
+              <circle cx="200" cy="150" r="6" fill="#0066FF" />
+              <circle cx="320" cy="200" r="4" fill="#0066FF" />
+              <circle cx="280" cy="350" r="5" fill="#0066FF" />
             </g>
 
-            {/* Heart icon */}
-            <g transform="translate(120, 300)">
-              <path d="M 0 -8 C -8 -16 -20 -16 -20 -8 C -20 0 0 16 0 16 C 0 16 20 0 20 -8 C 20 -16 8 -16 0 -8" fill="#FF6B6B" />
-            </g>
-
-            {/* Plus/Medical cross */}
-            <g transform="translate(380, 280)">
-              <rect x="-8" y="-20" width="16" height="40" fill="#0066FF" rx="2" />
-              <rect x="-20" y="-8" width="40" height="16" fill="#0066FF" rx="2" />
-            </g>
-
-            {/* Pill/Capsule */}
-            <g transform="translate(250, 380)">
-              <ellipse cx="-8" cy="0" rx="8" ry="12" fill="#FF9999" />
-              <ellipse cx="8" cy="0" rx="8" ry="12" fill="#6699FF" />
+            {/* Medical cross */}
+            <g transform="translate(400, 120)" opacity="0.15">
+              <rect x="-12" y="-30" width="24" height="60" fill="#0066FF" />
+              <rect x="-30" y="-12" width="60" height="24" fill="#0066FF" />
             </g>
           </svg>
         </div>

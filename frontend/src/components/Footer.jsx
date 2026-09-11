@@ -3,9 +3,9 @@ import { SPACING } from '../styles/colors';
 
 const Footer = () => {
   const footerStyle = {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0F172A',
     color: '#FFFFFF',
-    padding: `${SPACING.xxxl} ${SPACING.xl}`,
+    padding: `${SPACING.xxxl} ${SPACING.xl} ${SPACING.xl}`,
   };
 
   const containerStyle = {
@@ -24,31 +24,54 @@ const Footer = () => {
   };
 
   const columnTitleStyle = {
-    fontSize: '1.1rem',
+    fontSize: '1rem',
     fontWeight: '700',
-    marginBottom: SPACING.md,
     color: '#FFFFFF',
+    marginBottom: SPACING.md,
+    margin: 0,
+    letterSpacing: '0.5px',
+  };
+
+  const logoStyle = {
+    fontSize: '1.25rem',
+    fontWeight: '800',
+    color: '#0066FF',
+    marginBottom: SPACING.lg,
+  };
+
+  const descStyle = {
+    color: '#9CA3AF',
+    fontSize: '0.95rem',
+    lineHeight: '1.6',
   };
 
   const linkStyle = {
-    color: '#AAAAAA',
+    color: '#D1D5DB',
     textDecoration: 'none',
     fontSize: '0.95rem',
     cursor: 'pointer',
-    transition: 'color 0.3s',
+    transition: 'color 0.3s ease',
   };
 
   const infoStyle = {
-    color: '#AAAAAA',
+    color: '#D1D5DB',
     fontSize: '0.95rem',
     lineHeight: '1.8',
   };
 
-  const bottomStyle = {
-    borderTop: '1px solid #333333',
+  const dividerStyle = {
+    borderTop: '1px solid #374151',
     paddingTop: SPACING.xl,
-    textAlign: 'center',
-    color: '#777777',
+    marginTop: SPACING.xl,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: SPACING.lg,
+  };
+
+  const bottomTextStyle = {
+    color: '#6B7280',
     fontSize: '0.9rem',
   };
 
@@ -56,46 +79,91 @@ const Footer = () => {
     <footer style={footerStyle}>
       <div style={containerStyle}>
         <div style={columnStyle}>
-          <h3 style={columnTitleStyle}>🏥 Aether Hospital</h3>
-          <p style={infoStyle}>
-            Providing world-class healthcare services with compassion and excellence.
+          <div style={logoStyle}>Aether</div>
+          <p style={descStyle}>
+            Delivering premium healthcare with modern technology and compassionate care. Your health is our priority.
           </p>
         </div>
 
         <div style={columnStyle}>
           <h4 style={columnTitleStyle}>Services</h4>
-          <a style={{ ...linkStyle }} onMouseEnter={(e) => e.target.style.color = '#FFFFFF'} onMouseLeave={(e) => e.target.style.color = '#AAAAAA'}>Emergency Care</a>
-          <a style={{ ...linkStyle }} onMouseEnter={(e) => e.target.style.color = '#FFFFFF'} onMouseLeave={(e) => e.target.style.color = '#AAAAAA'}>Diagnostics</a>
-          <a style={{ ...linkStyle }} onMouseEnter={(e) => e.target.style.color = '#FFFFFF'} onMouseLeave={(e) => e.target.style.color = '#AAAAAA'}>Pediatrics</a>
+          <a
+            style={linkStyle}
+            onMouseEnter={(e) => (e.target.style.color = '#FFFFFF')}
+            onMouseLeave={(e) => (e.target.style.color = '#D1D5DB')}
+          >
+            Emergency Care
+          </a>
+          <a
+            style={linkStyle}
+            onMouseEnter={(e) => (e.target.style.color = '#FFFFFF')}
+            onMouseLeave={(e) => (e.target.style.color = '#D1D5DB')}
+          >
+            Cardiology
+          </a>
+          <a
+            style={linkStyle}
+            onMouseEnter={(e) => (e.target.style.color = '#FFFFFF')}
+            onMouseLeave={(e) => (e.target.style.color = '#D1D5DB')}
+          >
+            Diagnostics
+          </a>
+          <a
+            style={linkStyle}
+            onMouseEnter={(e) => (e.target.style.color = '#FFFFFF')}
+            onMouseLeave={(e) => (e.target.style.color = '#D1D5DB')}
+          >
+            Pediatrics
+          </a>
         </div>
 
         <div style={columnStyle}>
           <h4 style={columnTitleStyle}>Contact</h4>
           <p style={infoStyle}>
-            📍 123 Medical Plaza<br/>
-            Healthcare City, HC 12345
+            📍 123 Medical Center
+            <br />
+            Healthcare District, HC 12345
           </p>
           <p style={infoStyle}>
-            📞 +1 (555) 123-4567<br/>
-            📧 contact@aetherhospital.com
+            📞 +1 (555) 123-4567
+            <br />
+            📧 hello@aether.com
           </p>
         </div>
 
         <div style={columnStyle}>
           <h4 style={columnTitleStyle}>Hours</h4>
           <p style={infoStyle}>
-            Monday - Friday<br/>
+            <strong>Monday - Friday</strong>
+            <br />
             8:00 AM - 8:00 PM
           </p>
           <p style={infoStyle}>
-            Saturday - Sunday<br/>
+            <strong>Weekend</strong>
+            <br />
             9:00 AM - 6:00 PM
           </p>
         </div>
       </div>
 
-      <div style={bottomStyle}>
-        © 2024 Aether Hospital. All rights reserved. | Privacy Policy | Terms of Service
+      <div style={dividerStyle}>
+        <p style={bottomTextStyle}>© 2024 Aether Hospital. All rights reserved.</p>
+        <div style={{ display: 'flex', gap: SPACING.xl }}>
+          <a
+            style={{ ...bottomTextStyle, textDecoration: 'none', cursor: 'pointer' }}
+            onMouseEnter={(e) => (e.target.style.color = '#D1D5DB')}
+            onMouseLeave={(e) => (e.target.style.color = '#6B7280')}
+          >
+            Privacy Policy
+          </a>
+          <a
+            style={{ ...bottomTextStyle, textDecoration: 'none', cursor: 'pointer' }}
+            onMouseEnter={(e) => (e.target.style.color = '#D1D5DB')}
+            onMouseLeave={(e) => (e.target.style.color = '#6B7280')}
+          >
+            Terms of Service
+          </a>
+        </div>
       </div>
     </footer>
   );
