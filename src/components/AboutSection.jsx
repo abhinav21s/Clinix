@@ -28,24 +28,37 @@ const AboutSection = () => {
     marginTop: SPACING.xl,
   };
 
+  const iconContainerStyle = {
+    width: '70px',
+    height: '70px',
+    backgroundColor: COLORS.primary,
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto',
+    marginBottom: SPACING.md,
+    fontSize: '2rem',
+  };
+
   const reasons = [
     {
-      icon: '🏥',
+      symbol: '🏢',
       title: 'Modern Facilities',
       description: 'State-of-the-art medical equipment and technology.',
     },
     {
-      icon: '👨‍⚕️',
+      symbol: '👨',
       title: 'Expert Doctors',
       description: 'Highly qualified and experienced healthcare professionals.',
     },
     {
-      icon: '❤️',
+      symbol: '✓',
       title: 'Patient Care',
       description: 'Compassionate care with personalized treatment plans.',
     },
     {
-      icon: '🕐',
+      symbol: '⏱️',
       title: '24/7 Service',
       description: 'Round-the-clock emergency and medical services.',
     },
@@ -59,8 +72,8 @@ const AboutSection = () => {
           {reasons.map((reason, index) => (
             <Card key={index}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '3rem', marginBottom: SPACING.md }}>
-                  {reason.icon}
+                <div style={iconContainerStyle}>
+                  {reason.symbol}
                 </div>
                 <h3 style={{ 
                   color: COLORS.textPrimary, 

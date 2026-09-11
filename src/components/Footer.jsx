@@ -49,14 +49,14 @@ const Footer = () => {
       <div style={containerStyle}>
         <div style={contentStyle}>
           <div style={sectionStyle}>
-            <h4 style={titleStyle}>⚕️ Aether Hospital</h4>
+            <h4 style={titleStyle}>Aether Hospital</h4>
             <p>Delivering excellence in healthcare and compassionate patient care.</p>
           </div>
           <div style={sectionStyle}>
             <h4 style={titleStyle}>Contact</h4>
-            <p>📞 Phone: (555) 123-4567</p>
-            <p>📧 Email: info@aetherhospital.com</p>
-            <p>📍 Address: 123 Healthcare Ave, City, State 12345</p>
+            <p>Phone: (555) 123-4567</p>
+            <p>Email: info@aetherhospital.com</p>
+            <p>Address: 123 Healthcare Ave, City, State 12345</p>
           </div>
           <div style={sectionStyle}>
             <h4 style={titleStyle}>Quick Links</h4>

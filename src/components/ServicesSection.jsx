@@ -28,13 +28,27 @@ const ServicesSection = () => {
     marginTop: SPACING.xl,
   };
 
+  const iconStyle = {
+    width: '60px',
+    height: '60px',
+    backgroundColor: COLORS.primary,
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: COLORS.surface,
+    fontSize: '1.8rem',
+    margin: '0 auto',
+    marginBottom: SPACING.md,
+  };
+
   const services = [
-    { name: 'General Consultation', icon: '📋' },
-    { name: 'Emergency Care', icon: '🚑' },
-    { name: 'Surgery', icon: '🔬' },
-    { name: 'Pediatrics', icon: '👶' },
-    { name: 'Cardiology', icon: '❤️' },
-    { name: 'Orthopedics', icon: '🦴' },
+    { name: 'General Consultation', symbol: '📝' },
+    { name: 'Emergency Care', symbol: '⚡' },
+    { name: 'Surgery', symbol: '🔧' },
+    { name: 'Pediatrics', symbol: '🎒' },
+    { name: 'Cardiology', symbol: '💼' },
+    { name: 'Orthopedics', symbol: '🦵' },
   ];
 
   return (
@@ -45,8 +59,8 @@ const ServicesSection = () => {
           {services.map((service, index) => (
             <Card key={index}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: SPACING.md }}>
-                  {service.icon}
+                <div style={iconStyle}>
+                  {service.symbol}
                 </div>
                 <h3 style={{ 
                   color: COLORS.textPrimary,

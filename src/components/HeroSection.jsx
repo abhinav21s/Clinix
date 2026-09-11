@@ -2,7 +2,7 @@ import React from 'react';
 import { COLORS, SPACING } from '../styles/colors';
 import Button from './Button';
 
-const HeroSection = () => {
+const HeroSection = ({ onBookAppointment }) => {
   const heroStyle = {
     backgroundColor: COLORS.background,
     padding: `${SPACING.xxxl} ${SPACING.xl}`,
@@ -48,7 +48,7 @@ const HeroSection = () => {
           Excellence in Healthcare. Compassion in Every Care. Your wellness is our mission.
         </p>
         <div style={buttonContainerStyle}>
-          <Button variant="primary" size="lg">
+          <Button variant="primary" size="lg" onClick={onBookAppointment}>
             Book Appointment
           </Button>
           <Button variant="secondary" size="lg">

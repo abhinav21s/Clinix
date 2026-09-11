@@ -9,6 +9,16 @@
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "react-router-dom": "^6",
+    "@supabase/supabase-js": "^2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4",
+    "vite": "^5"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/abhinav21s/Clinix.git"
@@ -19,13 +29,5 @@
   "bugs": {
     "url": "https://github.com/abhinav21s/Clinix/issues"
   },
-  "homepage": "https://github.com/abhinav21s/Clinix#readme",
-  "devDependencies": {
-    "@supabase/supabase-js": "^2.116.0",
-    "@vitejs/plugin-react": "^6.1.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.3",
-    "vite": "^8.3.0"
-  }
+  "homepage": "https://github.com/abhinav21s/Clinix#readme"
 }
