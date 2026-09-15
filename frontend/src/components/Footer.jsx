@@ -120,14 +120,14 @@ const Footer = () => {
         <div style={columnStyle}>
           <h4 style={columnTitleStyle}>Contact</h4>
           <p style={infoStyle}>
-            📍 123 Medical Center
+            123 Medical Center
             <br />
             Healthcare District, HC 12345
           </p>
           <p style={infoStyle}>
-            📞 +1 (555) 123-4567
+            +1 (555) 123-4567
             <br />
-            📧 hello@aether.com
+            contact@aetherhospital.com
           </p>
         </div>
 
