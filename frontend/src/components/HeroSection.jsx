@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SPACING } from '../styles/colors';
 
@@ -200,3 +200,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
