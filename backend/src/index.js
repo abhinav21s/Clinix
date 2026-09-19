@@ -4,8 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes         from './routes/auth.js';
 import staffRoutes        from './routes/staff.js';
 import patientRoutes      from './routes/patients.js';
-import receptionistRoutes from './routes/receptionist.js';   // Devansh
-import appointmentRoutes  from './routes/appointments.js';   // Aryawardhan
+import receptionistRoutes from './routes/receptionist.js';
 
 dotenv.config();
 
@@ -19,7 +18,6 @@ app.use('/api/auth',         authRoutes);
 app.use('/api/staff',        staffRoutes);
 app.use('/api/patients',     patientRoutes);
 app.use('/api/receptionist', receptionistRoutes);
-app.use('/api/appointments',  appointmentRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'running', version: '2.0' }));
 
