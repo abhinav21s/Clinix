@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SPACING } from '../styles/colors';
 
@@ -10,7 +10,8 @@ const Navigation = () => {
     borderBottom: '1px solid #F0F4F8',
     padding: `${SPACING.md} ${SPACING.xl}`,
     display: 'flex',
-    
+    justifyContent: 'space-between',
+    alignItems: 'center',
     position: 'sticky',
     top: 0,
     zIndex: 100,
@@ -40,8 +41,6 @@ const Navigation = () => {
 
   return (
     <nav style={navStyle}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex',  width: '100%' }}>
-
       <div style={logoStyle} onClick={() => navigate('/')}>
         Aether
       </div>
@@ -59,12 +58,8 @@ const Navigation = () => {
       >
         Sign In
       </button>
-    
-      </div>
     </nav>
   );
 };
 
 export default Navigation;
-
-
