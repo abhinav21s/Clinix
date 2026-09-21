@@ -128,7 +128,6 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/patients - Admin assigns patient to doctor
 router.post('/', verifyToken, async (req, res) => {
   if (req.user.role !== 'admin' && req.user.role !== 'receptionist') {
     return res.status(403).json({ error: 'Access denied' });
