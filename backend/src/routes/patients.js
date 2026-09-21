@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import { supabase } from '../db.js';
 import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
@@ -128,8 +128,10 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/patients - Admin assigns patient to doctor
-router.post('/', verifyAdmin, async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'receptionist') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
   try {
     const { name, phone, age, gender, doctor_id, symptoms, visits } = req.body;
 
@@ -258,3 +260,4 @@ router.put('/:id/consultation', verifyToken, async (req, res) => {
 });
 
 export default router;
+
