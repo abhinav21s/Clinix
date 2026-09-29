@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { SPACING } from '../styles/colors';
 
 const AboutSection = () => {
@@ -167,3 +167,4 @@ const AboutSection = () => {
 };
 
 export default AboutSection;
+
