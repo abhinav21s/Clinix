@@ -5,7 +5,6 @@ async function seed() {
   try {
     console.log('--- Seeding Multi-Visit Date Patients ---');
 
-    // 1. Admin
     const adminPassword = await bcrypt.hash('admin123', 10);
     const { data: existingAdmin } = await supabase
       .from('users')
@@ -26,7 +25,6 @@ async function seed() {
       console.log('✓ Admin created: admin@aetherhospital.com / admin123');
     }
 
-    // 2. 5 Doctors
     const doctorPassword = await bcrypt.hash('doctor123', 10);
     const doctors = [
       { name: 'Dr. Sarah Jenkins', email: 'dr.jenkins@aetherhospital.com' },
