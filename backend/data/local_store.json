@@ -1,0 +1,129 @@
+{
+  "users": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "System Administrator",
+      "email": "admin@aetherhospital.com",
+      "password_hash": "$2b$10$kSw8sByirqChqGG/1tmW8eL4bnU7xp2wOv/3.DFLD/HIcpuQbnX2O",
+      "role": "admin",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "22222222-2222-2222-2222-222222222221",
+      "name": "Front Desk Receptionist",
+      "email": "receptionist@aetherhospital.com",
+      "password_hash": "$2b$10$4vtoRvfXtc5fLJ.dpgpLxOJQfTFw.jR9yxIgGGWvF12VhOStiW4PW",
+      "role": "receptionist",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "name": "Sarah Davis (Reception Desk)",
+      "email": "sarah.reception@aetherhospital.com",
+      "password_hash": "$2b$10$4vtoRvfXtc5fLJ.dpgpLxOJQfTFw.jR9yxIgGGWvF12VhOStiW4PW",
+      "role": "receptionist",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333331",
+      "name": "Dr. Sarah Jenkins",
+      "email": "dr.jenkins@aetherhospital.com",
+      "password_hash": "$2b$10$KGHEkYodtjpYo1SFog33tOs/egB3fMp.Bhp7lx7O6dl939bhg2uda",
+      "role": "doctor",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333332",
+      "name": "Dr. Rajesh Sharma",
+      "email": "dr.sharma@aetherhospital.com",
+      "password_hash": "$2b$10$KGHEkYodtjpYo1SFog33tOs/egB3fMp.Bhp7lx7O6dl939bhg2uda",
+      "role": "doctor",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333333",
+      "name": "Dr. Emily Chen",
+      "email": "dr.chen@aetherhospital.com",
+      "password_hash": "$2b$10$KGHEkYodtjpYo1SFog33tOs/egB3fMp.Bhp7lx7O6dl939bhg2uda",
+      "role": "doctor",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333334",
+      "name": "Dr. Michael Brown",
+      "email": "dr.brown@aetherhospital.com",
+      "password_hash": "$2b$10$KGHEkYodtjpYo1SFog33tOs/egB3fMp.Bhp7lx7O6dl939bhg2uda",
+      "role": "doctor",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333335",
+      "name": "Dr. Priya Patel",
+      "email": "dr.patel@aetherhospital.com",
+      "password_hash": "$2b$10$KGHEkYodtjpYo1SFog33tOs/egB3fMp.Bhp7lx7O6dl939bhg2uda",
+      "role": "doctor",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "gen-1790687890766-tof29ktq6",
+      "created_at": "2026-09-29T13:18:10.764Z",
+      "updated_at": "2026-09-29T13:18:10.766Z",
+      "name": "Alex Rivera",
+      "email": "alex.reception@gmail.com",
+      "password_hash": "$2b$10$h7O.f9UKpZCxRYIBOOKxpev8MMqjofabImAB0hqZSeifdFSsBWJnu",
+      "role": "receptionist",
+      "is_active": true
+    }
+  ],
+  "appointments": [
+    {
+      "id": "44444444-4444-4444-4444-444444444441",
+      "patient_name": "Eleanor Vance",
+      "email": "eleanorvance@patient.com",
+      "phone": "+1 555-0101",
+      "appointment_date": "2026-09-29",
+      "appointment_time": "10:00 AM",
+      "doctor_id": "33333333-3333-3333-3333-333333333331",
+      "department": "Cardiology",
+      "reason": "{\"age\":56,\"gender\":\"Female\",\"symptoms\":\"Chest tightness and shortness of breath on climbing stairs\",\"status\":\"completed\",\"visits\":[{\"id\":\"visit-1790688783200\",\"date\":\"29 Sept 2026 (Visit)\",\"doctor_name\":\"Dr. Sarah Jenkins\",\"diagnosis\":\"OPD Clinical Assessment\",\"medication\":\"recommended some calcium tablets\",\"notes\":\"has leg pain\",\"is_current\":true},{\"date\":\"14 May 2026\",\"doctor_name\":\"Dr. Sarah Jenkins\",\"diagnosis\":\"Mild Hypertension (Stage 1)\",\"medication\":\"Amlodipine 5mg (1 tab morning)\",\"notes\":\"Baseline BP 145/92 mmHg.\"}],\"notes\":\"has leg pain\",\"medication\":\"recommended some calcium tablets\",\"diagnosis\":\"OPD Clinical Assessment\",\"completed_at\":\"2026-09-29T13:33:03.200Z\"}",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z",
+      "updated_at": "2026-09-29T13:33:03.201Z"
+    },
+    {
+      "id": "44444444-4444-4444-4444-444444444442",
+      "patient_name": "David Miller",
+      "email": "davidmiller@patient.com",
+      "phone": "+1 555-0102",
+      "appointment_date": "2026-09-29",
+      "appointment_time": "11:00 AM",
+      "doctor_id": "33333333-3333-3333-3333-333333333331",
+      "department": "Cardiology",
+      "reason": "{\"age\":42,\"gender\":\"Male\",\"symptoms\":\"Palpitations and dizziness during workout\",\"status\":\"checked-in\",\"checked_in_at\":\"2026-09-29T13:11:03.025Z\",\"visits\":[]}",
+      "is_active": true,
+      "created_at": "2026-09-29T13:11:03.025Z"
+    },
+    {
+      "id": "gen-1790689799672-fii36y5pi",
+      "created_at": "2026-09-29T13:49:59.672Z",
+      "updated_at": "2026-09-29T13:55:46.024Z",
+      "patient_name": "Ayush Singh",
+      "email": "ayushsingh@patient.com",
+      "phone": "553464646465",
+      "appointment_date": "2026-09-29",
+      "appointment_time": "10:00 AM",
+      "doctor_id": "33333333-3333-3333-3333-333333333333",
+      "department": "OPD",
+      "reason": "{\"age\":22,\"gender\":\"Female\",\"symptoms\":\"chest\",\"status\":\"completed\",\"notes\":\"chest infection\",\"visits\":[{\"id\":\"visit-1790690146024\",\"date\":\"29 Sept 2026 (Visit)\",\"doctor_name\":\"Dr. Emily Chen\",\"diagnosis\":\"OPD Clinical Assessment\",\"medication\":\"glucose + mild jk\",\"notes\":\"chest infection\",\"is_current\":true}],\"checked_in_at\":\"2026-09-29T13:50:09.214Z\",\"medication\":\"glucose + mild jk\",\"diagnosis\":\"OPD Clinical Assessment\",\"completed_at\":\"2026-09-29T13:55:46.024Z\"}",
+      "is_active": true
+    }
+  ]
+}
