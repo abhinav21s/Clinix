@@ -121,7 +121,7 @@ const DoctorDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const waitingCount = patients.filter(p => p.status === 'waiting').length;
