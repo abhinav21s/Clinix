@@ -22,6 +22,13 @@ const AdminDashboard = () => {
   const [staffPassword, setStaffPassword] = useState('');
   const [staffRole, setStaffRole] = useState('doctor');
 
+  // Edit staff form
+  const [editingStaff, setEditingStaff] = useState(null);
+  const [editStaffName, setEditStaffName] = useState('');
+  const [editStaffEmail, setEditStaffEmail] = useState('');
+  const [editStaffRole, setEditStaffRole] = useState('doctor');
+  const [editStaffActive, setEditStaffActive] = useState(true);
+
   // Assign patient form
   const [patientName, setPatientName] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
@@ -154,6 +161,49 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleOpenEditStaff = (s) => {
+    setEditingStaff(s);
+    setEditStaffName(s.name || '');
+    setEditStaffEmail(s.email || '');
+    setEditStaffRole(s.role || 'doctor');
+    setEditStaffActive(s.is_active !== false);
+  };
+
+  const handleSaveEditStaff = async (e) => {
+    e.preventDefault();
+    if (!editStaffName || !editStaffEmail || !editStaffRole) {
+      alert('Name, Email, and Role are required');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/staff/${editingStaff.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editStaffName,
+          email: editStaffEmail,
+          role: editStaffRole,
+          is_active: editStaffActive
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update staff member');
+      }
+
+      showMsg('Staff details updated successfully');
+      setEditingStaff(null);
+      fetchStaff();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleDeleteStaff = async (id) => {
     if (window.confirm('Delete this staff member?')) {
       try {
@@ -171,7 +221,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const doctorsList = staff.filter(s => s.role === 'doctor');
@@ -365,7 +415,23 @@ const AdminDashboard = () => {
                         {s.role}
                       </span>
                     </td>
-                    <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                    <td style={{ padding: '0.85rem 1rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <button
+                        onClick={() => handleOpenEditStaff(s)}
+                        style={{
+                          padding: '0.3rem 0.65rem',
+                          backgroundColor: '#FFFFFF',
+                          color: '#0F172A',
+                          border: '1px solid #CBD5E1',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          marginRight: '0.5rem'
+                        }}
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => handleDeleteStaff(s.id)}
                         style={{
@@ -666,6 +732,101 @@ const AdminDashboard = () => {
                 Close Record
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT STAFF */}
+      {editingStaff && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '1.75rem', width: '100%', maxWidth: '420px', border: '1px solid #E2E8F0', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0F172A', fontWeight: '700' }}>Edit User Details</h3>
+              <button
+                type="button"
+                onClick={() => setEditingStaff(null)}
+                style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#64748B', lineHeight: '1' }}
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSaveEditStaff} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#475569', marginBottom: '0.25rem' }}>Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={editStaffName}
+                  onChange={(e) => setEditStaffName(e.target.value)}
+                  required
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '5px', fontSize: '0.88rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#475569', marginBottom: '0.25rem' }}>Email Address</label>
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={editStaffEmail}
+                  onChange={(e) => setEditStaffEmail(e.target.value)}
+                  required
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '5px', fontSize: '0.88rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#475569', marginBottom: '0.25rem' }}>Role</label>
+                <select
+                  value={editStaffRole}
+                  onChange={(e) => setEditStaffRole(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '5px', fontSize: '0.88rem', backgroundColor: '#FFFFFF' }}
+                >
+                  <option value="doctor">Doctor</option>
+                  <option value="receptionist">Receptionist</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#475569', marginBottom: '0.25rem' }}>Account Status</label>
+                <select
+                  value={editStaffActive ? 'active' : 'inactive'}
+                  onChange={(e) => setEditStaffActive(e.target.value === 'active')}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '5px', fontSize: '0.88rem', backgroundColor: '#FFFFFF' }}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive (Deactivated)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingStaff(null)}
+                  style={{ padding: '0.55rem 1rem', backgroundColor: '#FFFFFF', color: '#475569', border: '1px solid #CBD5E1', borderRadius: '5px', fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: '0.55rem 1rem', backgroundColor: '#0F172A', color: '#FFFFFF', border: 'none', borderRadius: '5px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
