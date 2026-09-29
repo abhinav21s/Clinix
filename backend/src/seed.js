@@ -65,6 +65,41 @@ async function seed() {
       }
     }
 
+    // 2b. Seed Receptionist users
+    const receptionistPassword = await bcrypt.hash('reception123', 10);
+    const receptionists = [
+      { name: 'Front Desk Receptionist', email: 'receptionist@aetherhospital.com' },
+      { name: 'Sarah Davis (Reception)', email: 'sarah.reception@aetherhospital.com' },
+    ];
+
+    for (const rec of receptionists) {
+      const { data: existingRec } = await supabase
+        .from('users')
+        .select('id, name, email')
+        .eq('email', rec.email)
+        .single();
+
+      if (!existingRec) {
+        await supabase.from('users').insert([
+          {
+            name: rec.name,
+            email: rec.email,
+            password_hash: receptionistPassword,
+            role: 'receptionist',
+            is_active: true,
+          },
+        ]);
+        console.log(`✓ Receptionist created: ${rec.email} / reception123`);
+      } else {
+        // Ensure password is up to date
+        await supabase
+          .from('users')
+          .update({ password_hash: receptionistPassword, is_active: true, role: 'receptionist' })
+          .eq('id', existingRec.id);
+        console.log(`✓ Receptionist updated: ${rec.email} / reception123`);
+      }
+    }
+
     // 3. Clear existing patients
     await supabase.from('appointments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
