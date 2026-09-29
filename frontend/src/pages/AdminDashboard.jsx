@@ -11,7 +11,7 @@ const AdminDashboard = () => {
   const [patients, setPatients] = useState([]);
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [showAssignPatient, setShowAssignPatient] = useState(false);
-  
+
   // Selected Patient Modal & Selected Visit Date Tab
   const [selectedPatientRecord, setSelectedPatientRecord] = useState(null);
   const [selectedVisitIndex, setSelectedVisitIndex] = useState(0);
@@ -183,12 +183,12 @@ const AdminDashboard = () => {
       : (
         selectedPatientRecord.notes
           ? [{
-              date: 'Current Visit',
-              doctor_name: selectedPatientRecord.doctor_name,
-              diagnosis: 'Consultation',
-              medication: selectedPatientRecord.medication || '',
-              notes: selectedPatientRecord.notes
-            }]
+            date: 'Current Visit',
+            doctor_name: selectedPatientRecord.doctor_name,
+            diagnosis: 'Consultation',
+            medication: selectedPatientRecord.medication || '',
+            notes: selectedPatientRecord.notes
+          }]
           : []
       )
   ) : [];
@@ -202,7 +202,7 @@ const AdminDashboard = () => {
       color: '#0F172A',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
     }}>
-      
+
       {/* Top Header */}
       <header style={{
         backgroundColor: '#FFFFFF',
@@ -274,21 +274,7 @@ const AdminDashboard = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            onClick={() => setShowAssignPatient(true)}
-            style={{
-              padding: '0.45rem 0.9rem',
-              backgroundColor: '#0F172A',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '5px',
-              fontSize: '0.82rem',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            + Assign Patient
-          </button>
+
           <button
             onClick={handleLogout}
             style={{
@@ -324,7 +310,7 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem' }}>
-        
+
         {/* TAB 1: STAFF DIRECTORY */}
         {activeTab === 'staff' && (
           <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '1.5rem' }}>
