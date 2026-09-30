@@ -92,13 +92,23 @@ const AppointmentPage = () => {
     const loadData = async () => {
       try {
         const [pRes, dRes] = await Promise.all([
-  fetch(`${API_URL}/patients`, { headers: H }),
-  fetch(`${API_URL}/receptionist/doctors`, { headers: H }),
-]);
+          fetch(`${API_URL}/patients`, { headers: H }),
+          fetch(`${API_URL}/appointments/doctors`, { headers: H }),
+        ]);
 
-        const [p, d] = await Promise.all([pRes.json(), dRes.json()]);
+        const [p, d] = await Promise.all([
+          pRes.json().catch(() => ({})),
+          dRes.json().catch(() => ({})),
+        ]);
 
-        setPatients(Array.isArray(p) ? p : []);
+        // Patient loading can fail independently from doctor loading.
+        // The doctor list is required for this page, so report its error clearly.
+        if (!dRes.ok) {
+          console.error('Doctors API error:', d);
+          throw new Error(d.error || 'Unable to load doctors.');
+        }
+
+        setPatients(pRes.ok && Array.isArray(p) ? p : []);
         setDoctors(Array.isArray(d) ? d.filter((u) => u.role === 'doctor') : []);
       } catch (error) {
         console.error(error);
@@ -135,24 +145,40 @@ const AppointmentPage = () => {
     }
 
     setChecking(true);
+    setMessage(null);
 
     try {
       const res = await fetch(
-        `${API_URL}/appointments/availability?doctor_id=${selectedDoctor.id}&date=${aptDate}&time=${encodeURIComponent(aptTime)}`,
+        `${API_URL}/appointments/availability?doctor_id=${encodeURIComponent(
+          selectedDoctor.id
+        )}&date=${encodeURIComponent(aptDate)}&time=${encodeURIComponent(aptTime)}`,
         { headers: H }
       );
 
       const data = await res.json();
+
+      if (!res.ok) {
+        console.error('Availability API error:', data);
+        setAvailability(null);
+        setMessage({
+          type: 'error',
+          text: data.error || 'Unable to check doctor availability.',
+        });
+        return;
+      }
+
       setAvailability(data);
     } catch (error) {
-      console.error(error);
-      setMessage({ type: 'error', text: 'Unable to check doctor availability.' });
+      console.error('Availability error:', error);
       setAvailability(null);
+      setMessage({
+        type: 'error',
+        text: 'Unable to check doctor availability.',
+      });
     } finally {
       setChecking(false);
     }
   }, [selectedDoctor, aptDate, aptTime, token]);
-
   useEffect(() => {
     checkAvailability();
   }, [checkAvailability]);
@@ -549,17 +575,11 @@ const AppointmentPage = () => {
                     required
                   >
                     <option value="">Choose Doctor</option>
-                    {doctors.length === 0 ? (
-                      <option value="" disabled>
-                        No doctors found
+                    {doctors.map((doctor) => (
+                      <option key={doctor.id} value={doctor.id}>
+                        {doctor.name}
                       </option>
-                    ) : (
-                      doctors.map((doctor) => (
-                        <option key={doctor.id} value={doctor.id}>
-                          {doctor.name}
-                        </option>
-                      ))
-                    )}
+                    ))}
                   </select>
                   <span
                     style={{
@@ -597,7 +617,6 @@ const AppointmentPage = () => {
                       value={aptTime}
                       onChange={(e) => {
                         setAptTime(e.target.value);
-                        setSelectedDoctor(null);
                       }}
                       required
                     >
