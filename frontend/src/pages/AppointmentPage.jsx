@@ -1,467 +1,723 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-// ── Design tokens — same as DoctorDashboard ───────────────────
-const C = {
-  bg:'#F8FAFC', white:'#FFFFFF', border:'#E2E8F0', border2:'#CBD5E1',
-  text:'#0F172A', text2:'#334155', text3:'#64748B', text4:'#94A3B8',
-  primary:'#0F172A', blue:'#3B82F6', blueLt:'#EFF6FF', blueBd:'#BFDBFE',
-  green:'#059669', greenLt:'#ECFDF5', greenBd:'#A7F3D0',
-  amber:'#92400E', amberLt:'#FEF3C7', amberBd:'#FDE68A',
-  red:'#DC2626', redLt:'#FEF2F2',
+const Icon = ({ type, size = 20 }) => {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  };
+
+  const paths = {
+    user: <>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c.8-3.4 3.2-5 7-5s6.2 1.6 7 5" />
+    </>,
+    phone: <>
+      <path d="M6.5 3.5l3 1.2-1.5 3.4a13.2 13.2 0 0 0 7.4 7.4l3.4-1.5 1.2 3c.3.8-.1 1.7-.9 2.1-1 .5-2.2.8-3.3.5C9.8 18.1 5.9 14.2 4.4 8.2c-.3-1.1 0-2.3.5-3.3.4-.8 1.3-1.2 2.1-.9Z" />
+    </>,
+    department: <>
+      <path d="M4 20V8l8-4 8 4v12" />
+      <path d="M9 20v-5h6v5M7 10h.01M12 10h.01M17 10h.01" />
+    </>,
+    calendar: <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M7 3v4M17 3v4M3.5 9h17" />
+    </>,
+    clock: <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7v5l3.2 2" />
+    </>,
+    doctor: <>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+      <path d="M9 4V2M15 4V2M12 14v3M8 21c.5-2.5 1.8-4 4-4s3.5 1.5 4 4" />
+    </>,
+    chevron: <path d="m7 9 5 5 5-5" />,
+    check: <path d="m5 12 4 4L19 6" />,
+    alert: <>
+      <path d="M12 3 2.8 20h18.4L12 3Z" />
+      <path d="M12 9v4M12 17h.01" />
+    </>,
+    arrow: <path d="m5 12 14 0M13 6l6 6-6 6" />,
+  };
+
+  return <svg {...common}>{paths[type]}</svg>;
 };
 
-// ── Step pill ─────────────────────────────────────────────────
-const StepPill = ({ n, label, active, done }) => (
-  <div style={{ display:'flex', alignItems:'center', gap:'0.35rem' }}>
-    <div style={{ width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center',
-      justifyContent:'center', fontWeight:700, fontSize:'0.72rem', flexShrink:0,
-      backgroundColor: done ? C.green : active ? C.primary : C.border2,
-      color: (done||active) ? C.white : C.text3 }}>
-      {done ? '✓' : n}
-    </div>
-    <span style={{ fontSize:'0.82rem', fontWeight: active ? 700 : 500,
-      color: active ? C.text : C.text3 }}>{label}</span>
-  </div>
-);
+const timeSlots = [
+  '09:00 AM',
+  '10:00 AM',
+  '11:00 AM',
+  '12:00 PM',
+  '02:00 PM',
+  '03:00 PM',
+  '04:00 PM',
+  '05:00 PM',
+];
 
-const StepSep = () => (
-  <div style={{ flex:1, height:1, backgroundColor:C.border, maxWidth:40 }} />
-);
-
-// ── MAIN ──────────────────────────────────────────────────────
 const AppointmentPage = () => {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { token } = useAuth();
 
-  const [step,        setStep]        = useState(1);
-  const [patients,    setPatients]    = useState([]);
-  const [doctors,     setDoctors]     = useState([]);
-  const [pSearch,     setPSearch]     = useState('');
-  const [selPatient,  setSelPatient]  = useState(null);
-  const [deptFilter,  setDeptFilter]  = useState('');
-  const [selDoctor,   setSelDoctor]   = useState(null);
-  const [aptDate,     setAptDate]     = useState(new Date().toISOString().split('T')[0]);
-  const [aptTime,     setAptTime]     = useState('');
-  const [avail,       setAvail]       = useState({});   // { doctorId: {available,reason,suggested_time} }
-  const [checking,    setChecking]    = useState({});   // loading state per doctor
-  const [booking,     setBooking]     = useState(false);
-  const [result,      setResult]      = useState(null); // { success, appointment, error }
-  const [conflictMsg, setConflictMsg] = useState('');
-  const [banner,      setBanner]      = useState(null);
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
 
-  const H = { Authorization:`Bearer ${token}` };
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [aptDate, setAptDate] = useState(new Date().toISOString().split('T')[0]);
+  const [aptTime, setAptTime] = useState('');
+  const [symptoms, setSymptoms] = useState('');
+  const [consent, setConsent] = useState(false);
 
-  const flash = useCallback((msg, ok=true) => {
-    setBanner({ msg, ok });
-    setTimeout(() => setBanner(null), 3500);
-  }, []);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [availability, setAvailability] = useState(null);
+  const [checking, setChecking] = useState(false);
 
-  // ── fetch ─────────────────────────────────────────────────────
+  const [booking, setBooking] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  const H = { Authorization: `Bearer ${token}` };
+
   useEffect(() => {
-    (async () => {
+    const loadData = async () => {
       try {
         const [pRes, dRes] = await Promise.all([
-          fetch(`${API_URL}/patients`, { headers:H }),
-          fetch(`${API_URL}/staff`,    { headers:H }),
-        ]);
+  fetch(`${API_URL}/patients`, { headers: H }),
+  fetch(`${API_URL}/receptionist/doctors`, { headers: H }),
+]);
+
         const [p, d] = await Promise.all([pRes.json(), dRes.json()]);
+
         setPatients(Array.isArray(p) ? p : []);
-        setDoctors(Array.isArray(d) ? d.filter(u=>u.role==='doctor') : []);
-      } catch(e) { console.error(e); }
-    })();
+        setDoctors(Array.isArray(d) ? d.filter((u) => u.role === 'doctor') : []);
+      } catch (error) {
+        console.error(error);
+        setMessage({ type: 'error', text: 'Unable to load patient and doctor information.' });
+      }
+    };
+
+    if (token) loadData();
   }, [token]);
 
-  // ── check availability per doctor ─────────────────────────────
-  const checkOne = useCallback(async (docId) => {
-    if (!aptDate || !aptTime) return;
-    setChecking(prev => ({ ...prev, [docId]:true }));
+  // Match the entered name/phone with an existing patient.
+  useEffect(() => {
+    const name = fullName.trim().toLowerCase();
+    const mobile = phone.trim();
+
+    if (!name && !mobile) {
+      setSelectedPatient(null);
+      return;
+    }
+
+    const exact = patients.find((p) => {
+      const sameName = name && (p.name || '').toLowerCase() === name;
+      const samePhone = mobile && (p.phone || '').replace(/\s/g, '') === mobile.replace(/\s/g, '');
+      return sameName || samePhone;
+    });
+
+    setSelectedPatient(exact || null);
+  }, [fullName, phone, patients]);
+
+  const checkAvailability = useCallback(async () => {
+    if (!selectedDoctor || !aptDate || !aptTime) {
+      setAvailability(null);
+      return;
+    }
+
+    setChecking(true);
+
     try {
       const res = await fetch(
-        `${API_URL}/appointments/availability?doctor_id=${docId}&date=${aptDate}&time=${encodeURIComponent(aptTime)}`,
-        { headers:H }
+        `${API_URL}/appointments/availability?doctor_id=${selectedDoctor.id}&date=${aptDate}&time=${encodeURIComponent(aptTime)}`,
+        { headers: H }
       );
+
       const data = await res.json();
-      setAvail(prev => ({ ...prev, [docId]: data }));
-    } catch(e) { console.error(e); }
-    setChecking(prev => ({ ...prev, [docId]:false }));
-  }, [aptDate, aptTime, token]);
+      setAvailability(data);
+    } catch (error) {
+      console.error(error);
+      setMessage({ type: 'error', text: 'Unable to check doctor availability.' });
+      setAvailability(null);
+    } finally {
+      setChecking(false);
+    }
+  }, [selectedDoctor, aptDate, aptTime, token]);
 
   useEffect(() => {
-    if (!aptDate || !aptTime || doctors.length===0) return;
-    doctors.forEach(d => checkOne(d.id));
-  }, [aptDate, aptTime, doctors, checkOne]);
+    checkAvailability();
+  }, [checkAvailability]);
 
-  // ── book ──────────────────────────────────────────────────────
-  const handleBook = async () => {
-    if (!selPatient||!selDoctor||!aptDate||!aptTime) {
-      flash('Please complete all fields', false); return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage(null);
+    setSuccess(null);
+
+    if (!fullName.trim() || !phone.trim() || !selectedDoctor || !aptDate || !aptTime) {
+      setMessage({ type: 'error', text: 'Please fill in all required details.' });
+      return;
     }
-    setBooking(true); setConflictMsg('');
+
+    if (!selectedPatient) {
+      setMessage({
+        type: 'error',
+        text: 'Patient not found. Please create the patient first from the Receptionist portal.',
+      });
+      return;
+    }
+
+    if (availability?.available !== true) {
+      setMessage({ type: 'error', text: 'The selected doctor is not available for this time slot.' });
+      return;
+    }
+
+    if (!consent) {
+      setMessage({ type: 'error', text: 'Please provide consent before requesting the appointment.' });
+      return;
+    }
+
+    setBooking(true);
+
     try {
       const res = await fetch(`${API_URL}/appointments`, {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json', ...H },
-        body: JSON.stringify({ patient_id:selPatient.id, doctor_id:selDoctor.id,
-          date:aptDate, time:aptTime, department:deptFilter||'General Medicine',
-          reason:selPatient.symptoms||'General checkup' }),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...H,
+        },
+        body: JSON.stringify({
+          patient_id: selectedPatient.id,
+          doctor_id: selectedDoctor.id,
+          date: aptDate,
+          time: aptTime,
+          department: selectedDoctor.department || 'General Medicine',
+          reason: symptoms.trim() || 'General checkup',
+        }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
-        if (data.conflict) setConflictMsg(data.error);
-        else flash(data.error||'Booking failed', false);
-        setResult({ success:false, error:data.error });
-      } else {
-        setResult({ success:true, appointment:data });
-        flash('Appointment booked!');
+        setMessage({
+          type: 'error',
+          text: data.error || 'Unable to book the appointment.',
+        });
+        return;
       }
-    } catch(e) { flash(e.message, false); }
-    setBooking(false);
+
+      setSuccess(data);
+      setMessage({
+        type: 'success',
+        text: 'Appointment requested successfully.',
+      });
+    } catch (error) {
+      console.error(error);
+      setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+    } finally {
+      setBooking(false);
+    }
   };
 
-  const reset = () => {
-    setStep(1); setSelPatient(null); setSelDoctor(null);
-    setAptTime(''); setResult(null); setConflictMsg(''); setPSearch('');
+  const resetForm = () => {
+    setFullName('');
+    setPhone('');
+    setSelectedDoctor(null);
+    setAptDate(new Date().toISOString().split('T')[0]);
+    setAptTime('');
+    setSymptoms('');
+    setConsent(false);
+    setSelectedPatient(null);
+    setAvailability(null);
+    setMessage(null);
+    setSuccess(null);
   };
 
-  // ── derived ───────────────────────────────────────────────────
-  const filtPats = patients.filter(p => {
-    if (!pSearch.trim()) return true;
-    const q = pSearch.toLowerCase();
-    return p.name?.toLowerCase().includes(q)||p.phone?.includes(q)||p.id?.toLowerCase().includes(q);
-  });
-  const filtDocs = deptFilter
-    ? doctors.filter(d=>(d.department||'').toLowerCase().includes(deptFilter.toLowerCase()))
-    : doctors;
+  const inputClass =
+    'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100';
 
-  // ── input style ───────────────────────────────────────────────
-  const inp = (extra={}) => ({
-    width:'100%', padding:'0.45rem 0.7rem', border:`1px solid ${C.border2}`, borderRadius:5,
-    fontSize:'0.875rem', outline:'none', fontFamily:'inherit',
-    backgroundColor:C.white, color:C.text, boxSizing:'border-box', ...extra,
-  });
-  const lbl = { fontSize:'0.76rem', fontWeight:600, color:C.text3,
-    display:'block', marginBottom:3, textTransform:'uppercase', letterSpacing:'0.3px' };
-
-  // ─────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight:'100vh', backgroundColor:C.bg, color:C.text,
-      fontFamily:'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-emerald-50 px-4 py-8">
+      <style>{`
+        .appointment-shell {
+          max-width: 760px;
+          margin: 0 auto;
+          background: rgba(255,255,255,0.96);
+          border: 1px solid #e7edf2;
+          border-radius: 26px;
+          box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
+          overflow: hidden;
+        }
 
-      {/* Header */}
-      <header style={{ backgroundColor:C.white, borderBottom:`1px solid ${C.border}`,
-        padding:'0.75rem 2rem', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'0.75rem' }}>
-          <div style={{ width:28, height:28, borderRadius:4, backgroundColor:C.primary, color:C.white,
-            display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:'0.8rem' }}>AH</div>
-          <div>
-            <span style={{ fontSize:'0.95rem', fontWeight:700, color:C.text }}>Aether Hospital</span>
-            <span style={{ color:C.text4, margin:'0 0.5rem' }}>|</span>
-            <span style={{ fontSize:'0.85rem', color:C.text3 }}>Book Appointment</span>
-          </div>
-        </div>
-        <button onClick={() => navigate(-1)}
-          style={{ padding:'0.4rem 0.85rem', backgroundColor:C.white, color:C.text3,
-            border:`1px solid ${C.border2}`, borderRadius:5, fontSize:'0.82rem', fontWeight:500, cursor:'pointer' }}>
-          ← Back
-        </button>
-      </header>
+        .appointment-top-line {
+          height: 5px;
+          background: linear-gradient(90deg, #1595aa, #20b8aa);
+        }
 
-      {/* Banner */}
-      {banner && (
-        <div style={{ backgroundColor:banner.ok?C.greenLt:C.redLt, color:banner.ok?'#065F46':C.red,
-          borderBottom:`1px solid ${banner.ok?C.greenBd:'#FECACA'}`,
-          padding:'0.5rem 2rem', textAlign:'center', fontWeight:500, fontSize:'0.85rem' }}>
-          {banner.msg}
-        </div>
-      )}
+        .appointment-body {
+          padding: 40px 42px 42px;
+        }
 
-      <div style={{ maxWidth:860, margin:'0 auto', padding:'1.5rem 1.25rem' }}>
+        .field {
+          position: relative;
+          margin-bottom: 18px;
+        }
 
-        {/* Steps indicator */}
-        <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.5rem',
-          backgroundColor:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:'0.85rem 1.25rem' }}>
-          <StepPill n={1} label="Select Patient" active={step===1} done={step>1} />
-          <StepSep />
-          <StepPill n={2} label="Find Doctor" active={step===2} done={step>2} />
-          <StepSep />
-          <StepPill n={3} label="Confirm" active={step===3} done={result?.success} />
-        </div>
+        .field-icon {
+          position: absolute;
+          left: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #9aa5b1;
+          pointer-events: none;
+          display: flex;
+        }
 
-        {/* ════ STEP 1 ════ */}
-        {step === 1 && (
-          <div style={{ backgroundColor:C.white, border:`1px solid ${C.border}`,
-            borderRadius:8, overflow:'hidden' }}>
-            <div style={{ padding:'0.85rem 1rem', borderBottom:`1px solid ${C.border}`,
-              backgroundColor:C.bg, fontSize:'0.85rem', fontWeight:700, color:C.text2 }}>
-              Search Patient
-            </div>
-            <div style={{ padding:'1rem' }}>
-              <input style={inp({ marginBottom:'0.85rem' })}
-                placeholder="Search by name, phone, or patient ID…"
-                value={pSearch} onChange={e => setPSearch(e.target.value)} autoFocus />
+        .field select,
+        .field input {
+          padding-left: 50px;
+          height: 62px;
+          border-radius: 16px;
+          border: 1px solid #e7ebef;
+          background: #fbfcfd;
+          color: #64748b;
+          font-size: 16px;
+          width: 100%;
+          outline: none;
+          box-sizing: border-box;
+          transition: .2s;
+        }
 
-              {pSearch && filtPats.length===0 && (
-                <div style={{ textAlign:'center', padding:'1.5rem', color:C.text4 }}>
-                  <div style={{ fontSize:'1.5rem', marginBottom:4 }}>🔍</div>
-                  <p style={{ fontSize:'0.85rem' }}>No patient found for "<strong>{pSearch}</strong>"</p>
-                  <p style={{ fontSize:'0.8rem', marginTop:4 }}>Create the patient first from the Receptionist portal.</p>
+        .field select:focus,
+        .field input:focus,
+        .symptoms:focus {
+          border-color: #9ccfd5;
+          box-shadow: 0 0 0 3px rgba(32,184,170,.08);
+          background: white;
+        }
+
+        .field select {
+          appearance: auto;
+        }
+
+        .date-time-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        .symptoms {
+          width: 100%;
+          min-height: 112px;
+          resize: vertical;
+          box-sizing: border-box;
+          border: 1px solid #dfe5ea;
+          border-radius: 16px;
+          background: #fbfcfd;
+          padding: 18px 20px;
+          font-size: 16px;
+          color: #475569;
+          outline: none;
+          font-family: inherit;
+          margin-bottom: 20px;
+        }
+
+        .consent {
+          display: flex;
+          gap: 14px;
+          align-items: flex-start;
+          background: #eff7ff;
+          border: 1px solid #d7e7f4;
+          border-radius: 16px;
+          padding: 20px;
+          color: #475569;
+          font-size: 15px;
+          line-height: 1.65;
+          margin-bottom: 20px;
+        }
+
+        .consent input {
+          width: 23px;
+          height: 23px;
+          margin-top: 2px;
+          flex-shrink: 0;
+          accent-color: #1595aa;
+        }
+
+        .submit-btn {
+          width: 100%;
+          height: 60px;
+          border: none;
+          border-radius: 30px;
+          color: white;
+          font-size: 17px;
+          font-weight: 700;
+          cursor: pointer;
+          background: linear-gradient(90deg, #7bb9d8, #79d5c5);
+          box-shadow: 0 8px 20px rgba(75, 170, 177, .18);
+          transition: .2s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 25px rgba(75, 170, 177, .25);
+        }
+
+        .submit-btn:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+        }
+
+        .message {
+          border-radius: 12px;
+          padding: 13px 16px;
+          margin-bottom: 18px;
+          font-size: 14px;
+        }
+
+        .message.error {
+          background: #fff1f2;
+          border: 1px solid #fecdd3;
+          color: #be123c;
+        }
+
+        .message.success {
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          color: #047857;
+        }
+
+        .doctor-box {
+          margin: -4px 0 18px;
+          border: 1px solid #e5e7eb;
+          border-radius: 14px;
+          padding: 14px 16px;
+          background: #fafafa;
+        }
+
+        .doctor-box-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: .04em;
+          margin-bottom: 8px;
+        }
+
+        .doctor-options {
+          display: grid;
+          gap: 8px;
+        }
+
+        .doctor-option {
+          width: 100%;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          background: white;
+          padding: 10px 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          cursor: pointer;
+          text-align: left;
+        }
+
+        .doctor-option.selected {
+          border-color: #1595aa;
+          background: #f0fdfa;
+        }
+
+        .available {
+          color: #059669;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .unavailable {
+          color: #dc2626;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .success-card {
+          text-align: center;
+          padding: 28px 12px 8px;
+        }
+
+        .success-icon {
+          width: 64px;
+          height: 64px;
+          margin: 0 auto 14px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #ecfdf5;
+          color: #059669;
+        }
+
+        .back-btn {
+          border: none;
+          background: transparent;
+          color: #64748b;
+          font-size: 14px;
+          cursor: pointer;
+          margin-bottom: 18px;
+          padding: 0;
+        }
+
+        @media (max-width: 650px) {
+          .appointment-body {
+            padding: 28px 20px 30px;
+          }
+          .date-time-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+          }
+          .appointment-shell {
+            border-radius: 18px;
+          }
+        }
+      `}</style>
+
+      <div className="appointment-shell">
+        <div className="appointment-top-line" />
+
+        <div className="appointment-body">
+          <button className="back-btn" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+
+          {!success ? (
+            <>
+              <h1 className="text-3xl font-bold text-slate-800 mb-8">
+                Fill in your details
+              </h1>
+
+              {message && (
+                <div className={`message ${message.type}`}>
+                  {message.text}
                 </div>
               )}
 
-              <div style={{ display:'flex', flexDirection:'column', gap:'0.3rem', maxHeight:380, overflowY:'auto' }}>
-                {filtPats.map(p => (
-                  <div key={p.id} onClick={() => setSelPatient(p)}
-                    style={{ padding:'0.7rem 0.85rem', borderRadius:6, cursor:'pointer',
-                      border:`1px solid ${selPatient?.id===p.id?C.primary:C.border}`,
-                      backgroundColor: selPatient?.id===p.id?C.blueLt:C.bg,
-                      transition:'border-color 0.15s, background-color 0.15s',
-                      display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <div>
-                      <div style={{ fontWeight:600, fontSize:'0.9rem', color:C.text, marginBottom:2 }}>{p.name}</div>
-                      <div style={{ fontSize:'0.78rem', color:C.text3 }}>
-                        {p.phone} · {p.age} yrs · {p.gender}
-                      </div>
-                    </div>
-                    {selPatient?.id===p.id && (
-                      <span style={{ fontSize:'0.78rem', fontWeight:700, color:C.blue }}>✓ Selected</span>
+              <form onSubmit={handleSubmit}>
+                <div className="field">
+                  <span className="field-icon">
+                    <Icon type="user" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Your Full Name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="field">
+                  <span className="field-icon">
+                    <Icon type="phone" />
+                  </span>
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="field">
+                  <span className="field-icon">
+                    <Icon type="doctor" />
+                  </span>
+                  <select
+                    value={selectedDoctor?.id || ''}
+                    onChange={(e) => {
+                      const doctor = doctors.find((d) => String(d.id) === e.target.value);
+                      setSelectedDoctor(doctor || null);
+                      setAvailability(null);
+                    }}
+                    required
+                  >
+                    <option value="">Choose Doctor</option>
+                    {doctors.length === 0 ? (
+                      <option value="" disabled>
+                        No doctors found
+                      </option>
+                    ) : (
+                      doctors.map((doctor) => (
+                        <option key={doctor.id} value={doctor.id}>
+                          {doctor.name}
+                        </option>
+                      ))
                     )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            {selPatient && (
-              <div style={{ padding:'0.85rem 1rem', borderTop:`1px solid ${C.border}`,
-                backgroundColor:C.blueLt, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontSize:'0.85rem', fontWeight:600, color:'#1D4ED8' }}>
-                  ✓ {selPatient.name} selected
-                </span>
-                <div style={{ display:'flex', gap:'0.5rem' }}>
-                  <button onClick={() => setSelPatient(null)}
-                    style={{ padding:'0.4rem 0.85rem', backgroundColor:C.white, color:C.text2,
-                      border:`1px solid ${C.border2}`, borderRadius:5, fontSize:'0.82rem', cursor:'pointer' }}>
-                    Change
-                  </button>
-                  <button onClick={() => setStep(2)}
-                    style={{ padding:'0.4rem 0.85rem', backgroundColor:C.primary, color:C.white,
-                      border:'none', borderRadius:5, fontSize:'0.82rem', fontWeight:600, cursor:'pointer' }}>
-                    Next →
-                  </button>
+                  </select>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: 17,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#94a3b8',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <Icon type="chevron" size={18} />
+                  </span>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* ════ STEP 2 ════ */}
-        {step === 2 && (
-          <div>
-            {/* Selected patient bar */}
-            <div style={{ backgroundColor:C.blueLt, border:`1px solid ${C.blueBd}`,
-              borderRadius:6, padding:'0.6rem 1rem', marginBottom:'1rem',
-              display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontSize:'0.85rem', fontWeight:600, color:'#1D4ED8' }}>
-                Patient: {selPatient?.name}
-              </span>
-              <button onClick={() => setStep(1)}
-                style={{ padding:'3px 10px', backgroundColor:C.white, color:C.text2,
-                  border:`1px solid ${C.border2}`, borderRadius:4, fontSize:'0.78rem', cursor:'pointer' }}>
-                Change
-              </button>
-            </div>
-
-            <div style={{ backgroundColor:C.white, border:`1px solid ${C.border}`,
-              borderRadius:8, overflow:'hidden' }}>
-              <div style={{ padding:'0.85rem 1rem', borderBottom:`1px solid ${C.border}`,
-                backgroundColor:C.bg, fontSize:'0.85rem', fontWeight:700, color:C.text2 }}>
-                Choose Date, Time & Doctor
-              </div>
-              <div style={{ padding:'1rem' }}>
-                {/* Filters */}
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'0.75rem', marginBottom:'1rem' }}>
-                  <div>
-                    <label style={lbl}>Department</label>
-                    <select style={inp()} value={deptFilter} onChange={e=>setDeptFilter(e.target.value)}>
-                      <option value="">All Departments</option>
-                      {['Cardiology','Neurology','Orthopedics','General Medicine','Pediatrics','Dermatology']
-                        .map(d=><option key={d}>{d}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={lbl}>Date *</label>
-                    <input style={inp()} type="date"
+                <div className="date-time-row">
+                  <div className="field">
+                    <span className="field-icon">
+                      <Icon type="calendar" />
+                    </span>
+                    <input
+                      type="date"
                       min={new Date().toISOString().split('T')[0]}
-                      value={aptDate} onChange={e=>setAptDate(e.target.value)} />
+                      value={aptDate}
+                      onChange={(e) => setAptDate(e.target.value)}
+                      required
+                    />
                   </div>
-                  <div>
-                    <label style={lbl}>Time Slot *</label>
-                    <select style={inp()} value={aptTime} onChange={e=>setAptTime(e.target.value)}>
+
+                  <div className="field">
+                    <span className="field-icon">
+                      <Icon type="clock" />
+                    </span>
+                    <select
+                      value={aptTime}
+                      onChange={(e) => {
+                        setAptTime(e.target.value);
+                        setSelectedDoctor(null);
+                      }}
+                      required
+                    >
                       <option value="">Select Time</option>
-                      {['09:00 AM','10:00 AM','11:00 AM','12:00 PM','02:00 PM','03:00 PM','04:00 PM','05:00 PM']
-                        .map(t=><option key={t} value={t}>{t}</option>)}
+                      {timeSlots.map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
-                {/* Doctor cards */}
-                <div style={{ display:'flex', flexDirection:'column', gap:'0.4rem' }}>
-                  {filtDocs.length===0 && <p style={{ color:C.text4, fontSize:'0.85rem' }}>No doctors found.</p>}
-                  {filtDocs.map(doc => {
-                    const av = avail[doc.id];
-                    const isChecking = checking[doc.id];
-                    const noInfo = !aptDate||!aptTime;
-                    const canBook = av?.available===true;
-
-                    let availEl = null;
-                    if (noInfo) {
-                      availEl = <span style={{ fontSize:'0.78rem', color:C.text4 }}>Select date & time to check</span>;
-                    } else if (isChecking) {
-                      availEl = <span style={{ fontSize:'0.78rem', color:C.text3 }}>Checking…</span>;
-                    } else if (!av) {
-                      availEl = <span style={{ fontSize:'0.78rem', color:C.text3 }}>—</span>;
-                    } else if (canBook) {
-                      availEl = (
-                        <span style={{ fontSize:'0.72rem', padding:'2px 7px', borderRadius:4, fontWeight:600,
-                          backgroundColor:C.greenLt, color:C.green, border:`1px solid ${C.greenBd}` }}>
-                          ✓ Available at {aptTime}
-                        </span>
-                      );
-                    } else {
-                      availEl = (
-                        <div style={{ display:'flex', alignItems:'center', gap:'0.4rem', flexWrap:'wrap' }}>
-                          <span style={{ fontSize:'0.72rem', padding:'2px 7px', borderRadius:4, fontWeight:600,
-                            backgroundColor:C.redLt, color:C.red, border:`1px solid #FECACA` }}>
-                            ✗ Unavailable
-                          </span>
-                          {av.suggested_time && (
-                            <span style={{ fontSize:'0.72rem', padding:'2px 7px', borderRadius:4, fontWeight:600,
-                              backgroundColor:C.amberLt, color:C.amber, border:`1px solid ${C.amberBd}` }}>
-                              💡 Try {av.suggested_time}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div key={doc.id} style={{ padding:'0.75rem 0.85rem', borderRadius:6,
-                        border:`1px solid ${selDoctor?.id===doc.id?C.primary:canBook?C.greenBd:C.border}`,
-                        backgroundColor: selDoctor?.id===doc.id?C.selected:C.bg,
-                        display:'flex', justifyContent:'space-between', alignItems:'center',
-                        transition:'border-color 0.15s' }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:'0.7rem' }}>
-                          <div style={{ width:34, height:34, borderRadius:6, backgroundColor:C.greenLt,
-                            color:C.green, display:'flex', alignItems:'center', justifyContent:'center',
-                            fontWeight:700, fontSize:'1rem', flexShrink:0 }}>
-                            {doc.name?.[4]||'D'}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight:600, fontSize:'0.88rem', color:C.text }}>{doc.name}</div>
-                            <div style={{ fontSize:'0.76rem', color:C.text3 }}>{doc.department||'General'}</div>
-                          </div>
-                        </div>
-                        <div style={{ display:'flex', alignItems:'center', gap:'0.65rem' }}>
-                          {availEl}
-                          <button
-                            disabled={noInfo||!canBook}
-                            onClick={() => { setSelDoctor(doc); setStep(3); setResult(null); setConflictMsg(''); }}
-                            style={{ padding:'0.35rem 0.85rem', fontSize:'0.78rem', fontWeight:600, cursor:canBook?'pointer':'default',
-                              border:'none', borderRadius:4, flexShrink:0,
-                              backgroundColor: canBook?C.primary:C.border2,
-                              color: canBook?C.white:C.text3 }}>
-                            {canBook ? 'Select →' : 'Unavailable'}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════ STEP 3 ════ */}
-        {step === 3 && (
-          <div style={{ backgroundColor:C.white, border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden' }}>
-            <div style={{ padding:'0.85rem 1rem', borderBottom:`1px solid ${C.border}`,
-              backgroundColor:C.bg, fontSize:'0.85rem', fontWeight:700, color:C.text2 }}>
-              Confirm Appointment
-            </div>
-
-            {/* Success */}
-            {result?.success ? (
-              <div style={{ textAlign:'center', padding:'3rem 2rem' }}>
-                <div style={{ width:64, height:64, borderRadius:'50%', backgroundColor:C.greenLt,
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:'1.8rem', margin:'0 auto 1rem' }}>✓</div>
-                <h2 style={{ margin:'0 0 0.5rem', color:C.text, fontWeight:700 }}>Appointment Confirmed!</h2>
-                <p style={{ color:C.text3, marginBottom:'1.5rem', fontSize:'0.9rem' }}>
-                  {selPatient?.name} → {selDoctor?.name} · {aptDate} at {aptTime}
-                </p>
-                <div style={{ display:'flex', gap:'0.6rem', justifyContent:'center' }}>
-                  <button onClick={reset}
-                    style={{ padding:'0.5rem 1.25rem', backgroundColor:C.primary, color:C.white,
-                      border:'none', borderRadius:5, fontWeight:600, cursor:'pointer', fontSize:'0.88rem' }}>
-                    Book Another
-                  </button>
-                  <button onClick={() => navigate(-1)}
-                    style={{ padding:'0.5rem 1.25rem', backgroundColor:C.white, color:C.text2,
-                      border:`1px solid ${C.border2}`, borderRadius:5, cursor:'pointer', fontSize:'0.88rem' }}>
-                    Back
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ padding:'1.25rem' }}>
-                {/* Summary grid */}
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.65rem', marginBottom:'1.25rem' }}>
-                  {[
-                    ['Patient', selPatient?.name||'—'],
-                    ['Patient ID', selPatient?.id||'—'],
-                    ['Doctor', selDoctor?.name||'—'],
-                    ['Department', selDoctor?.department||deptFilter||'General Medicine'],
-                    ['Date', aptDate],
-                    ['Time', aptTime],
-                  ].map(([k,v]) => (
-                    <div key={k} style={{ padding:'0.65rem 0.8rem', backgroundColor:C.bg,
-                      borderRadius:5, border:`1px solid ${C.border}` }}>
-                      <div style={{ fontSize:'0.72rem', fontWeight:600, color:C.text3,
-                        textTransform:'uppercase', letterSpacing:'0.3px', marginBottom:3 }}>{k}</div>
-                      <div style={{ fontWeight:700, fontSize:'0.9rem', color:C.text }}>{v}</div>
+                {selectedDoctor && aptDate && aptTime && (
+                  <div className="doctor-box">
+                    <div className="doctor-box-title">
+                      {checking ? 'Checking doctor availability...' : 'Doctor availability'}
                     </div>
-                  ))}
-                </div>
 
-                {/* Conflict banner */}
-                {conflictMsg && (
-                  <div style={{ display:'flex', alignItems:'center', gap:'0.6rem',
-                    backgroundColor:C.redLt, border:`1px solid #FECACA`,
-                    borderRadius:6, padding:'0.65rem 0.85rem', marginBottom:'1rem', color:C.red }}>
-                    <span style={{ fontSize:'1rem' }}>⚠️</span>
-                    <span style={{ fontSize:'0.85rem', fontWeight:500 }}>{conflictMsg}</span>
+                    {checking ? (
+                      <div style={{ color: '#64748b', fontSize: 13 }}>
+                        Checking {selectedDoctor.name}...
+                      </div>
+                    ) : availability?.available === true ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                        <div>
+                          <strong style={{ color: '#334155' }}>{selectedDoctor.name}</strong>
+                          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                            {selectedDoctor.department || 'General Medicine'}
+                          </div>
+                        </div>
+                        <span className="available">✓ Available</span>
+                      </div>
+                    ) : availability ? (
+                      <div>
+                        <div className="unavailable">✗ Unavailable at {aptTime}</div>
+                        {availability.suggested_time && (
+                          <div style={{ fontSize: 12, color: '#92400e', marginTop: 6 }}>
+                            Suggested time: {availability.suggested_time}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 )}
 
-                <div style={{ display:'flex', gap:'0.6rem' }}>
-                  <button onClick={() => setStep(2)}
-                    style={{ padding:'0.5rem 1.1rem', backgroundColor:C.white, color:C.text2,
-                      border:`1px solid ${C.border2}`, borderRadius:5, cursor:'pointer', fontSize:'0.88rem' }}>
-                    ← Back
-                  </button>
-                  <button onClick={handleBook} disabled={booking}
-                    style={{ padding:'0.5rem 1.25rem', backgroundColor:C.primary, color:C.white,
-                      border:'none', borderRadius:5, fontWeight:600, cursor:'pointer', fontSize:'0.88rem' }}>
-                    {booking ? 'Confirming…' : '✓ Confirm Appointment'}
-                  </button>
+                <textarea
+                  className="symptoms"
+                  placeholder="Describe your symptoms (optional)"
+                  value={symptoms}
+                  onChange={(e) => setSymptoms(e.target.value)}
+                />
+
+                <label className="consent">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                  />
+                  <span>
+                    I consent to the hospital collecting and using my name, contact
+                    number, and appointment details only for the purpose of booking
+                    and managing my appointment with the doctor. I have read and
+                    understood the <strong style={{ color: '#2563eb' }}>Privacy Policy</strong> and I agree to it.
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  className="submit-btn"
+                  disabled={booking}
+                >
+                  {booking ? 'Requesting Appointment...' : '➤  Request Appointment'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="success-card">
+              <div className="success-icon">
+                <Icon type="check" size={32} />
+              </div>
+
+              <h1 className="text-2xl font-bold text-slate-800 mb-2">
+                Appointment Confirmed!
+              </h1>
+
+              <p className="text-slate-500 mb-6">
+                {success.patient_name || fullName} with{' '}
+                {success.doctor_name || selectedDoctor?.name} on {aptDate} at {aptTime}.
+              </p>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-left mb-6">
+                <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">
+                  Appointment ID
+                </div>
+                <div className="font-bold text-slate-700">
+                  {success.id}
                 </div>
               </div>
-            )}
-          </div>
-        )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="flex-1 rounded-full bg-slate-900 text-white py-3 font-semibold"
+                >
+                  Book Another
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex-1 rounded-full border border-slate-300 bg-white text-slate-700 py-3 font-semibold"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
