@@ -8,7 +8,9 @@ const router = express.Router();
 const verifyReceptionistOrAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
     if (req.user.role !== 'receptionist' && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Receptionist or admin access required' });
+      return res.status(403).json({
+        error: 'Receptionist or admin access required'
+      });
     }
 
     next();
@@ -26,11 +28,12 @@ const parseMeta = (row) => {
   }
 };
 
-// ─── GET /api/appointments/doctors ─────────────────────────────
-// Return active doctors for the appointment booking page.
-// This endpoint is authenticated, but does NOT require
-// receptionist/admin role.
-router.get('/doctors', verifyToken, async (req, res) => {
+// ─── GET /api/appointments/doctors ────────────────────────────
+// Return active doctors for the public appointment booking page.
+//
+// Patients do NOT need to log in or register before booking,
+// so this endpoint is intentionally public.
+router.get('/doctors', async (req, res) => {
   try {
     const { data: doctors, error } = await supabase
       .from('users')
@@ -54,13 +57,17 @@ router.get('/doctors', verifyToken, async (req, res) => {
 });
 
 // ─── GET /api/appointments/availability ──────────────────────
-// Check if a doctor is available at a given date + time
+// Check whether a doctor is available on a particular
+// date and time.
 //
 // Query params:
 // doctor_id
 // date
 // time
-router.get('/availability', verifyToken, async (req, res) => {
+//
+// This endpoint is public because anyone visiting the
+// appointment page must be able to check availability.
+router.get('/availability', async (req, res) => {
   try {
     const { doctor_id, date, time } = req.query;
 
@@ -70,7 +77,22 @@ router.get('/availability', verifyToken, async (req, res) => {
       });
     }
 
-    // Fetch all appointments for this doctor on this date
+    // Make sure the doctor exists and is active.
+    const { data: doctor, error: doctorError } = await supabase
+      .from('users')
+      .select('id, name, role, is_active')
+      .eq('id', doctor_id)
+      .eq('role', 'doctor')
+      .eq('is_active', true)
+      .single();
+
+    if (doctorError || !doctor) {
+      return res.status(404).json({
+        error: 'Doctor not found or inactive'
+      });
+    }
+
+    // Get all appointments for this doctor on the selected date.
     const { data: rows, error } = await supabase
       .from('appointments')
       .select('*')
@@ -81,8 +103,7 @@ router.get('/availability', verifyToken, async (req, res) => {
       throw error;
     }
 
-    // Check if any non-cancelled appointment exists
-    // at the requested exact time
+    // Check whether the exact time is already booked.
     const conflict = (rows || []).some((row) => {
       const meta = parseMeta(row);
 
@@ -93,7 +114,6 @@ router.get('/availability', verifyToken, async (req, res) => {
     });
 
     if (conflict) {
-      // Common appointment slots
       const SLOTS = [
         '09:00 AM',
         '10:00 AM',
@@ -109,9 +129,8 @@ router.get('/availability', verifyToken, async (req, res) => {
         .filter((row) => parseMeta(row).status !== 'cancelled')
         .map((row) => row.appointment_time);
 
-      const suggested = SLOTS.find(
-        (slot) => !bookedSlots.includes(slot)
-      ) || null;
+      const suggested =
+        SLOTS.find((slot) => !bookedSlots.includes(slot)) || null;
 
       return res.json({
         available: false,
@@ -120,7 +139,7 @@ router.get('/availability', verifyToken, async (req, res) => {
       });
     }
 
-    // No conflict found
+    // No appointment conflict.
     res.json({
       available: true,
       reason: 'Doctor is free at this time',
@@ -137,12 +156,21 @@ router.get('/availability', verifyToken, async (req, res) => {
 });
 
 // ─── POST /api/appointments ───────────────────────────────────
-// Book a new appointment.
-// Only receptionist/admin can create appointments.
-router.post('/', verifyReceptionistOrAdmin, async (req, res) => {
+// PUBLIC appointment booking.
+//
+// A patient does NOT need:
+// - an account
+// - a patient login
+// - an existing patient record
+//
+// The appointment itself creates the initial patient record
+// using the patient's name and phone number.
+router.post('/', async (req, res) => {
   try {
     const {
-      patient_id,
+      patient_name,
+      phone,
+      email,
       doctor_id,
       date,
       time,
@@ -150,14 +178,45 @@ router.post('/', verifyReceptionistOrAdmin, async (req, res) => {
       reason
     } = req.body;
 
-    if (!doctor_id || !date || !time) {
+    const patientName = String(patient_name || '').trim();
+    const patientPhone = String(phone || '').trim();
+
+    // Required fields.
+    if (
+      !patientName ||
+      !patientPhone ||
+      !doctor_id ||
+      !date ||
+      !time
+    ) {
       return res.status(400).json({
-        error: 'doctor_id, date and time are required'
+        error: 'Patient name, phone, doctor, date and time are required'
+      });
+    }
+
+    // ── Verify doctor ──────────────────────────────────────────
+    const {
+      data: doctor,
+      error: doctorErr
+    } = await supabase
+      .from('users')
+      .select('id, name, email, role, is_active')
+      .eq('id', doctor_id)
+      .eq('role', 'doctor')
+      .eq('is_active', true)
+      .single();
+
+    if (doctorErr || !doctor) {
+      return res.status(404).json({
+        error: 'Selected doctor was not found or is inactive'
       });
     }
 
     // ── Conflict check ────────────────────────────────────────
-    const { data: existing, error: checkErr } = await supabase
+    const {
+      data: existing,
+      error: checkErr
+    } = await supabase
       .from('appointments')
       .select('*')
       .eq('doctor_id', doctor_id)
@@ -189,12 +248,15 @@ router.post('/', verifyReceptionistOrAdmin, async (req, res) => {
       ];
 
       const bookedSlots = (existing || [])
-        .filter((row) => parseMeta(row).status !== 'cancelled')
+        .filter(
+          (row) => parseMeta(row).status !== 'cancelled'
+        )
         .map((row) => row.appointment_time);
 
-      const suggested = SLOTS.find(
-        (slot) => !bookedSlots.includes(slot)
-      ) || null;
+      const suggested =
+        SLOTS.find(
+          (slot) => !bookedSlots.includes(slot)
+        ) || null;
 
       return res.status(409).json({
         error: `Doctor already has an appointment at ${time}. Please choose a different time slot.`,
@@ -203,78 +265,73 @@ router.post('/', verifyReceptionistOrAdmin, async (req, res) => {
       });
     }
 
-    // ── Fetch patient info if patient_id provided ─────────────
-    let patientName = 'Unknown Patient';
-    let patientPhone = '';
-    let patientEmail = '';
+    // ── Build patient email ───────────────────────────────────
+    // Email is optional on the public appointment page.
+    // If the user does not provide one, create a placeholder.
+    const cleanName = patientName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '.')
+      .replace(/^\.|\.$/g, '');
 
-    if (patient_id) {
-      const { data: patientRow } = await supabase
-        .from('appointments')
-        .select('patient_name, phone, email')
-        .eq('id', patient_id)
-        .single();
+    const patientEmail =
+      String(email || '').trim() ||
+      `${cleanName || 'patient'}@patient.com`;
 
-      if (patientRow) {
-        patientName = patientRow.patient_name;
-        patientPhone = patientRow.phone || '';
-        patientEmail = patientRow.email || '';
-      }
-    }
-
-    // ── Save appointment ──────────────────────────────────────
+    // ── Create appointment metadata ───────────────────────────
     const meta = {
       status: 'confirmed',
-      symptoms: reason || 'General checkup',
+      symptoms:
+        String(reason || '').trim() ||
+        'General checkup',
       visits: [],
-      booked_at: new Date().toISOString()
+      booked_at: new Date().toISOString(),
+      source: 'public_booking'
     };
 
-    const { data: newRow, error: insertErr } = await supabase
+    // ── Insert appointment ─────────────────────────────────────
+    const {
+      data: newRow,
+      error: insertErr
+    } = await supabase
       .from('appointments')
       .insert([
         {
           patient_name: patientName,
-          email:
-            patientEmail ||
-            `${patientName
-              .toLowerCase()
-              .replace(/\s+/g, '')}@patient.com`,
-          phone: patientPhone || 'N/A',
+          email: patientEmail,
+          phone: patientPhone,
           appointment_date: date,
           appointment_time: time,
           doctor_id: doctor_id,
-          department: department || 'General Medicine',
+          department:
+            department || 'General Medicine',
           reason: JSON.stringify(meta),
           is_active: true
         }
       ])
-      .select();
+      .select()
+      .single();
 
     if (insertErr) {
       throw insertErr;
     }
 
-    const saved = newRow[0];
-
-    // ── Fetch doctor name for response ────────────────────────
-    const { data: doctor } = await supabase
-      .from('users')
-      .select('id, name')
-      .eq('id', doctor_id)
-      .single();
-
-    // ── Response ───────────────────────────────────────────────
+    // ── Return booking information ─────────────────────────────
     res.status(201).json({
-      id: saved.id,
-      patient_name: saved.patient_name,
-      doctor_id: saved.doctor_id,
-      doctor_name: doctor?.name || 'Assigned Doctor',
-      date: saved.appointment_date,
-      time: saved.appointment_time,
-      department: saved.department,
+      id: newRow.id,
+      patient_name: newRow.patient_name,
+      phone: newRow.phone,
+      doctor_id: newRow.doctor_id,
+      doctor_name:
+        doctor.name || 'Assigned Doctor',
+      date: newRow.appointment_date,
+      time: newRow.appointment_time,
+      department: newRow.department,
       status: 'confirmed',
-      created_at: saved.created_at
+      created_at: newRow.created_at,
+
+      // Indicates that this booking was made directly
+      // through the public appointment page.
+      new_patient: true
     });
 
   } catch (err) {
@@ -287,7 +344,10 @@ router.post('/', verifyReceptionistOrAdmin, async (req, res) => {
 });
 
 // ─── GET /api/appointments ────────────────────────────────────
-// List all appointments
+// List all appointments.
+//
+// Protected because this is used by authenticated
+// receptionist/doctor/admin dashboards.
 //
 // Optional filters:
 // ?date=YYYY-MM-DD
@@ -331,7 +391,7 @@ router.get('/', verifyToken, async (req, res) => {
       throw error;
     }
 
-    // Fetch doctors
+    // Fetch doctors to map doctor IDs to names.
     const { data: doctors } = await supabase
       .from('users')
       .select('id, name');
@@ -356,24 +416,30 @@ router.get('/', verifyToken, async (req, res) => {
         date: row.appointment_date,
         time: row.appointment_time,
         department: row.department,
-        status: meta.status || 'confirmed',
-        reason: meta.symptoms || '',
+        status:
+          meta.status || 'confirmed',
+        reason:
+          meta.symptoms || '',
         created_at: row.created_at
       };
     });
 
-    // Optional status filtering
+    // Optional status filter.
     if (status) {
-      appointments = appointments.filter(
-        (appointment) =>
-          appointment.status === status
-      );
+      appointments =
+        appointments.filter(
+          (appointment) =>
+            appointment.status === status
+        );
     }
 
     res.json(appointments);
 
   } catch (err) {
-    console.error('Get appointments error:', err);
+    console.error(
+      'Get appointments error:',
+      err
+    );
 
     res.status(500).json({
       error: 'Failed to fetch appointments'
@@ -381,60 +447,69 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// ─── DELETE /api/appointments/:id ────────────────────────────
-// Cancel an appointment
-router.delete('/:id', verifyReceptionistOrAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
+// ─── DELETE /api/appointments/:id ─────────────────────────────
+// Cancel an appointment.
+//
+// Only receptionist/admin can cancel.
+router.delete(
+  '/:id',
+  verifyReceptionistOrAdmin,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    // Find appointment
-    const {
-      data: row,
-      error: fetchErr
-    } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('id', id)
-      .single();
+      // Find appointment.
+      const {
+        data: row,
+        error: fetchErr
+      } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (fetchErr || !row) {
-      return res.status(404).json({
-        error: 'Appointment not found'
+      if (fetchErr || !row) {
+        return res.status(404).json({
+          error: 'Appointment not found'
+        });
+      }
+
+      // Parse existing metadata.
+      const meta = parseMeta(row);
+
+      // Mark appointment as cancelled.
+      meta.status = 'cancelled';
+
+      const {
+        error: updateErr
+      } = await supabase
+        .from('appointments')
+        .update({
+          reason: JSON.stringify(meta),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (updateErr) {
+        throw updateErr;
+      }
+
+      res.json({
+        success: true,
+        message: 'Appointment cancelled'
+      });
+
+    } catch (err) {
+      console.error(
+        'Cancel appointment error:',
+        err
+      );
+
+      res.status(500).json({
+        error: 'Failed to cancel appointment'
       });
     }
-
-    // Read existing metadata
-    const meta = parseMeta(row);
-
-    // Mark as cancelled
-    meta.status = 'cancelled';
-
-    const {
-      error: updateErr
-    } = await supabase
-      .from('appointments')
-      .update({
-        reason: JSON.stringify(meta),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
-    if (updateErr) {
-      throw updateErr;
-    }
-
-    res.json({
-      success: true,
-      message: 'Appointment cancelled'
-    });
-
-  } catch (err) {
-    console.error('Cancel appointment error:', err);
-
-    res.status(500).json({
-      error: 'Failed to cancel appointment'
-    });
   }
-});
+);
 
 export default router;
