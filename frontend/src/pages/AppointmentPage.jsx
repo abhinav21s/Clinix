@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const Icon = ({ type, size = 20 }) => {
   const common = {
@@ -17,36 +17,50 @@ const Icon = ({ type, size = 20 }) => {
   };
 
   const paths = {
-    user: <>
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20c.8-3.4 3.2-5 7-5s6.2 1.6 7 5" />
-    </>,
-    phone: <>
-      <path d="M6.5 3.5l3 1.2-1.5 3.4a13.2 13.2 0 0 0 7.4 7.4l3.4-1.5 1.2 3c.3.8-.1 1.7-.9 2.1-1 .5-2.2.8-3.3.5C9.8 18.1 5.9 14.2 4.4 8.2c-.3-1.1 0-2.3.5-3.3.4-.8 1.3-1.2 2.1-.9Z" />
-    </>,
-    department: <>
-      <path d="M4 20V8l8-4 8 4v12" />
-      <path d="M9 20v-5h6v5M7 10h.01M12 10h.01M17 10h.01" />
-    </>,
-    calendar: <>
-      <rect x="3.5" y="5" width="17" height="15" rx="2" />
-      <path d="M7 3v4M17 3v4M3.5 9h17" />
-    </>,
-    clock: <>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M12 7v5l3.2 2" />
-    </>,
-    doctor: <>
-      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
-      <path d="M9 4V2M15 4V2M12 14v3M8 21c.5-2.5 1.8-4 4-4s3.5 1.5 4 4" />
-    </>,
+    user: (
+      <>
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c.8-3.4 3.2-5 7-5s6.2 1.6 7 5" />
+      </>
+    ),
+
+    phone: (
+      <>
+        <path d="M6.5 3.5l3 1.2-1.5 3.4a13.2 13.2 0 0 0 7.4 7.4l3.4-1.5 1.2 3c.3.8-.1 1.7-.9 2.1-1 .5-2.2.8-3.3.5C9.8 18.1 5.9 14.2 4.4 8.2c-.3-1.1 0-2.3.5-3.3.4-.8 1.3-1.2 2.1-.9Z" />
+      </>
+    ),
+
+    calendar: (
+      <>
+        <rect x="3.5" y="5" width="17" height="15" rx="2" />
+        <path d="M7 3v4M17 3v4M3.5 9h17" />
+      </>
+    ),
+
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7v5l3.2 2" />
+      </>
+    ),
+
+    doctor: (
+      <>
+        <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+        <path d="M9 4V2M15 4V2M12 14v3M8 21c.5-2.5 1.8-4 4-4s3.5 1.5 4 4" />
+      </>
+    ),
+
     chevron: <path d="m7 9 5 5 5-5" />,
+
     check: <path d="m5 12 4 4L19 6" />,
-    alert: <>
-      <path d="M12 3 2.8 20h18.4L12 3Z" />
-      <path d="M12 9v4M12 17h.01" />
-    </>,
-    arrow: <path d="m5 12 14 0M13 6l6 6-6 6" />,
+
+    alert: (
+      <>
+        <path d="M12 3 2.8 20h18.4L12 3Z" />
+        <path d="M12 9v4M12 17h.01" />
+      </>
+    ),
   };
 
   return <svg {...common}>{paths[type]}</svg>;
@@ -65,20 +79,19 @@ const timeSlots = [
 
 const AppointmentPage = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
 
-  const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [aptDate, setAptDate] = useState(new Date().toISOString().split('T')[0]);
+  const [aptDate, setAptDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
   const [aptTime, setAptTime] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [consent, setConsent] = useState(false);
 
-  const [selectedPatient, setSelectedPatient] = useState(null);
   const [availability, setAvailability] = useState(null);
   const [checking, setChecking] = useState(false);
 
@@ -86,58 +99,43 @@ const AppointmentPage = () => {
   const [message, setMessage] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const H = { Authorization: `Bearer ${token}` };
-
+  // Public appointment page:
+  // No patient login or registration is required.
   useEffect(() => {
-    const loadData = async () => {
+    const loadDoctors = async () => {
       try {
-        const [pRes, dRes] = await Promise.all([
-          fetch(`${API_URL}/patients`, { headers: H }),
-          fetch(`${API_URL}/appointments/doctors`, { headers: H }),
-        ]);
+        const res = await fetch(`${API_URL}/appointments/doctors`);
 
-        const [p, d] = await Promise.all([
-          pRes.json().catch(() => ({})),
-          dRes.json().catch(() => ({})),
-        ]);
+        const data = await res.json().catch(() => []);
 
-        // Patient loading can fail independently from doctor loading.
-        // The doctor list is required for this page, so report its error clearly.
-        if (!dRes.ok) {
-          console.error('Doctors API error:', d);
-          throw new Error(d.error || 'Unable to load doctors.');
+        if (!res.ok) {
+          throw new Error(
+            data?.error || 'Unable to load doctors.'
+          );
         }
 
-        setPatients(pRes.ok && Array.isArray(p) ? p : []);
-        setDoctors(Array.isArray(d) ? d.filter((u) => u.role === 'doctor') : []);
+        const doctorList = Array.isArray(data)
+          ? data.filter(
+              (doctor) =>
+                String(doctor.role || '').toLowerCase() === 'doctor'
+            )
+          : [];
+
+        setDoctors(doctorList);
       } catch (error) {
-        console.error(error);
-        setMessage({ type: 'error', text: 'Unable to load patient and doctor information.' });
+        console.error('Doctors loading error:', error);
+
+        setMessage({
+          type: 'error',
+          text: error.message || 'Unable to load doctors.',
+        });
       }
     };
 
-    if (token) loadData();
-  }, [token]);
+    loadDoctors();
+  }, []);
 
-  // Match the entered name/phone with an existing patient.
-  useEffect(() => {
-    const name = fullName.trim().toLowerCase();
-    const mobile = phone.trim();
-
-    if (!name && !mobile) {
-      setSelectedPatient(null);
-      return;
-    }
-
-    const exact = patients.find((p) => {
-      const sameName = name && (p.name || '').toLowerCase() === name;
-      const samePhone = mobile && (p.phone || '').replace(/\s/g, '') === mobile.replace(/\s/g, '');
-      return sameName || samePhone;
-    });
-
-    setSelectedPatient(exact || null);
-  }, [fullName, phone, patients]);
-
+  // Check availability whenever doctor/date/time changes.
   const checkAvailability = useCallback(async () => {
     if (!selectedDoctor || !aptDate || !aptTime) {
       setAvailability(null);
@@ -148,29 +146,35 @@ const AppointmentPage = () => {
     setMessage(null);
 
     try {
-      const res = await fetch(
-        `${API_URL}/appointments/availability?doctor_id=${encodeURIComponent(
-          selectedDoctor.id
-        )}&date=${encodeURIComponent(aptDate)}&time=${encodeURIComponent(aptTime)}`,
-        { headers: H }
-      );
+      const url =
+        `${API_URL}/appointments/availability` +
+        `?doctor_id=${encodeURIComponent(selectedDoctor.id)}` +
+        `&date=${encodeURIComponent(aptDate)}` +
+        `&time=${encodeURIComponent(aptTime)}`;
 
-      const data = await res.json();
+      const res = await fetch(url);
+
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        console.error('Availability API error:', data);
         setAvailability(null);
+
         setMessage({
           type: 'error',
-          text: data.error || 'Unable to check doctor availability.',
+          text:
+            data?.error ||
+            'Unable to check doctor availability.',
         });
+
         return;
       }
 
       setAvailability(data);
     } catch (error) {
       console.error('Availability error:', error);
+
       setAvailability(null);
+
       setMessage({
         type: 'error',
         text: 'Unable to check doctor availability.',
@@ -178,76 +182,110 @@ const AppointmentPage = () => {
     } finally {
       setChecking(false);
     }
-  }, [selectedDoctor, aptDate, aptTime, token]);
+  }, [selectedDoctor, aptDate, aptTime]);
+
   useEffect(() => {
     checkAvailability();
   }, [checkAvailability]);
 
+  // Submit appointment.
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setMessage(null);
     setSuccess(null);
 
-    if (!fullName.trim() || !phone.trim() || !selectedDoctor || !aptDate || !aptTime) {
-      setMessage({ type: 'error', text: 'Please fill in all required details.' });
-      return;
-    }
-
-    if (!selectedPatient) {
+    if (
+      !fullName.trim() ||
+      !phone.trim() ||
+      !selectedDoctor ||
+      !aptDate ||
+      !aptTime
+    ) {
       setMessage({
         type: 'error',
-        text: 'Patient not found. Please create the patient first from the Receptionist portal.',
+        text: 'Please fill in all required details.',
       });
+
       return;
     }
 
     if (availability?.available !== true) {
-      setMessage({ type: 'error', text: 'The selected doctor is not available for this time slot.' });
+      setMessage({
+        type: 'error',
+        text:
+          'The selected doctor is not available for this time slot.',
+      });
+
       return;
     }
 
     if (!consent) {
-      setMessage({ type: 'error', text: 'Please provide consent before requesting the appointment.' });
+      setMessage({
+        type: 'error',
+        text:
+          'Please provide consent before requesting the appointment.',
+      });
+
       return;
     }
 
     setBooking(true);
 
     try {
-      const res = await fetch(`${API_URL}/appointments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...H,
-        },
-        body: JSON.stringify({
-          patient_id: selectedPatient.id,
-          doctor_id: selectedDoctor.id,
-          date: aptDate,
-          time: aptTime,
-          department: selectedDoctor.department || 'General Medicine',
-          reason: symptoms.trim() || 'General checkup',
-        }),
-      });
+      const res = await fetch(
+        `${API_URL}/appointments`,
+        {
+          method: 'POST',
 
-      const data = await res.json();
+          headers: {
+            'Content-Type': 'application/json',
+          },
+
+          body: JSON.stringify({
+            patient_name: fullName.trim(),
+            phone: phone.trim(),
+            doctor_id: selectedDoctor.id,
+            date: aptDate,
+            time: aptTime,
+            department:
+              selectedDoctor.department ||
+              'General Medicine',
+            reason:
+              symptoms.trim() ||
+              'General checkup',
+          }),
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         setMessage({
           type: 'error',
-          text: data.error || 'Unable to book the appointment.',
+          text:
+            data?.error ||
+            'Unable to book the appointment.',
         });
+
         return;
       }
 
       setSuccess(data);
+
       setMessage({
         type: 'success',
-        text: 'Appointment requested successfully.',
+        text:
+          'Appointment requested successfully.',
       });
     } catch (error) {
-      console.error(error);
-      setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+      console.error('Booking error:', error);
+
+      setMessage({
+        type: 'error',
+        text:
+          'Something went wrong. Please try again.',
+      });
     } finally {
       setBooking(false);
     }
@@ -257,18 +295,19 @@ const AppointmentPage = () => {
     setFullName('');
     setPhone('');
     setSelectedDoctor(null);
-    setAptDate(new Date().toISOString().split('T')[0]);
+
+    setAptDate(
+      new Date().toISOString().split('T')[0]
+    );
+
     setAptTime('');
     setSymptoms('');
     setConsent(false);
-    setSelectedPatient(null);
+
     setAvailability(null);
     setMessage(null);
     setSuccess(null);
   };
-
-  const inputClass =
-    'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-emerald-50 px-4 py-8">
@@ -438,29 +477,6 @@ const AppointmentPage = () => {
           margin-bottom: 8px;
         }
 
-        .doctor-options {
-          display: grid;
-          gap: 8px;
-        }
-
-        .doctor-option {
-          width: 100%;
-          border: 1px solid #e2e8f0;
-          border-radius: 10px;
-          background: white;
-          padding: 10px 12px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          cursor: pointer;
-          text-align: left;
-        }
-
-        .doctor-option.selected {
-          border-color: #1595aa;
-          background: #f0fdfa;
-        }
-
         .available {
           color: #059669;
           font-size: 12px;
@@ -504,10 +520,12 @@ const AppointmentPage = () => {
           .appointment-body {
             padding: 28px 20px 30px;
           }
+
           .date-time-row {
             grid-template-columns: 1fr;
             gap: 0;
           }
+
           .appointment-shell {
             border-radius: 18px;
           }
@@ -518,7 +536,11 @@ const AppointmentPage = () => {
         <div className="appointment-top-line" />
 
         <div className="appointment-body">
-          <button className="back-btn" onClick={() => navigate(-1)}>
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() => navigate(-1)}
+          >
             ← Back
           </button>
 
@@ -529,82 +551,127 @@ const AppointmentPage = () => {
               </h1>
 
               {message && (
-                <div className={`message ${message.type}`}>
+                <div
+                  className={`message ${message.type}`}
+                >
                   {message.text}
                 </div>
               )}
 
               <form onSubmit={handleSubmit}>
+                {/* Full Name */}
                 <div className="field">
                   <span className="field-icon">
                     <Icon type="user" />
                   </span>
+
                   <input
                     type="text"
                     placeholder="Your Full Name"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) =>
+                      setFullName(e.target.value)
+                    }
                     required
                   />
                 </div>
 
+                {/* Phone */}
                 <div className="field">
                   <span className="field-icon">
                     <Icon type="phone" />
                   </span>
+
                   <input
                     type="tel"
                     placeholder="Phone Number"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) =>
+                      setPhone(e.target.value)
+                    }
                     required
                   />
                 </div>
 
+                {/* Doctor */}
                 <div className="field">
                   <span className="field-icon">
                     <Icon type="doctor" />
                   </span>
+
                   <select
                     value={selectedDoctor?.id || ''}
                     onChange={(e) => {
-                      const doctor = doctors.find((d) => String(d.id) === e.target.value);
-                      setSelectedDoctor(doctor || null);
+                      const doctor =
+                        doctors.find(
+                          (d) =>
+                            String(d.id) ===
+                            e.target.value
+                        );
+
+                      setSelectedDoctor(
+                        doctor || null
+                      );
+
                       setAvailability(null);
                     }}
                     required
                   >
-                    <option value="">Choose Doctor</option>
+                    <option value="">
+                      Choose Doctor
+                    </option>
+
                     {doctors.map((doctor) => (
-                      <option key={doctor.id} value={doctor.id}>
+                      <option
+                        key={doctor.id}
+                        value={doctor.id}
+                      >
                         {doctor.name}
+                        {doctor.department
+                          ? ` (${doctor.department})`
+                          : ''}
                       </option>
                     ))}
                   </select>
+
                   <span
                     style={{
                       position: 'absolute',
                       right: 17,
                       top: '50%',
-                      transform: 'translateY(-50%)',
+                      transform:
+                        'translateY(-50%)',
                       color: '#94a3b8',
                       pointerEvents: 'none',
                     }}
                   >
-                    <Icon type="chevron" size={18} />
+                    <Icon
+                      type="chevron"
+                      size={18}
+                    />
                   </span>
                 </div>
 
+                {/* Date and Time */}
                 <div className="date-time-row">
                   <div className="field">
                     <span className="field-icon">
                       <Icon type="calendar" />
                     </span>
+
                     <input
                       type="date"
-                      min={new Date().toISOString().split('T')[0]}
+                      min={
+                        new Date()
+                          .toISOString()
+                          .split('T')[0]
+                      }
                       value={aptDate}
-                      onChange={(e) => setAptDate(e.target.value)}
+                      onChange={(e) =>
+                        setAptDate(
+                          e.target.value
+                        )
+                      }
                       required
                     />
                   </div>
@@ -613,16 +680,25 @@ const AppointmentPage = () => {
                     <span className="field-icon">
                       <Icon type="clock" />
                     </span>
+
                     <select
                       value={aptTime}
-                      onChange={(e) => {
-                        setAptTime(e.target.value);
-                      }}
+                      onChange={(e) =>
+                        setAptTime(
+                          e.target.value
+                        )
+                      }
                       required
                     >
-                      <option value="">Select Time</option>
+                      <option value="">
+                        Select Time
+                      </option>
+
                       {timeSlots.map((time) => (
-                        <option key={time} value={time}>
+                        <option
+                          key={time}
+                          value={time}
+                        >
                           {time}
                         </option>
                       ))}
@@ -630,73 +706,156 @@ const AppointmentPage = () => {
                   </div>
                 </div>
 
-                {selectedDoctor && aptDate && aptTime && (
-                  <div className="doctor-box">
-                    <div className="doctor-box-title">
-                      {checking ? 'Checking doctor availability...' : 'Doctor availability'}
-                    </div>
-
-                    {checking ? (
-                      <div style={{ color: '#64748b', fontSize: 13 }}>
-                        Checking {selectedDoctor.name}...
+                {/* Availability */}
+                {selectedDoctor &&
+                  aptDate &&
+                  aptTime && (
+                    <div className="doctor-box">
+                      <div className="doctor-box-title">
+                        {checking
+                          ? 'Checking doctor availability...'
+                          : 'Doctor availability'}
                       </div>
-                    ) : availability?.available === true ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                        <div>
-                          <strong style={{ color: '#334155' }}>{selectedDoctor.name}</strong>
-                          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                            {selectedDoctor.department || 'General Medicine'}
-                          </div>
+
+                      {checking ? (
+                        <div
+                          style={{
+                            color: '#64748b',
+                            fontSize: 13,
+                          }}
+                        >
+                          Checking{' '}
+                          {selectedDoctor.name}
+                          ...
                         </div>
-                        <span className="available">✓ Available</span>
-                      </div>
-                    ) : availability ? (
-                      <div>
-                        <div className="unavailable">✗ Unavailable at {aptTime}</div>
-                        {availability.suggested_time && (
-                          <div style={{ fontSize: 12, color: '#92400e', marginTop: 6 }}>
-                            Suggested time: {availability.suggested_time}
-                          </div>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                )}
+                      ) : availability?.available ===
+                        true ? (
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems:
+                              'center',
+                            justifyContent:
+                              'space-between',
+                            gap: 12,
+                          }}
+                        >
+                          <div>
+                            <strong
+                              style={{
+                                color:
+                                  '#334155',
+                              }}
+                            >
+                              {selectedDoctor.name}
+                            </strong>
 
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color:
+                                  '#94a3b8',
+                                marginTop: 2,
+                              }}
+                            >
+                              {selectedDoctor.department ||
+                                'General Medicine'}
+                            </div>
+                          </div>
+
+                          <span className="available">
+                            ✓ Available
+                          </span>
+                        </div>
+                      ) : availability ? (
+                        <div>
+                          <div className="unavailable">
+                            ✗ Unavailable at{' '}
+                            {aptTime}
+                          </div>
+
+                          {availability.suggested_time && (
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color:
+                                  '#92400e',
+                                marginTop: 6,
+                              }}
+                            >
+                              Suggested time:{' '}
+                              {
+                                availability.suggested_time
+                              }
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+
+                {/* Symptoms */}
                 <textarea
                   className="symptoms"
                   placeholder="Describe your symptoms (optional)"
                   value={symptoms}
-                  onChange={(e) => setSymptoms(e.target.value)}
+                  onChange={(e) =>
+                    setSymptoms(
+                      e.target.value
+                    )
+                  }
                 />
 
+                {/* Consent */}
                 <label className="consent">
                   <input
                     type="checkbox"
                     checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
+                    onChange={(e) =>
+                      setConsent(
+                        e.target.checked
+                      )
+                    }
                   />
+
                   <span>
-                    I consent to the hospital collecting and using my name, contact
-                    number, and appointment details only for the purpose of booking
-                    and managing my appointment with the doctor. I have read and
-                    understood the <strong style={{ color: '#2563eb' }}>Privacy Policy</strong> and I agree to it.
+                    I consent to the hospital
+                    collecting and using my name,
+                    contact number, and appointment
+                    details only for the purpose of
+                    booking and managing my appointment
+                    with the doctor. I have read and
+                    understood the{' '}
+                    <strong
+                      style={{
+                        color: '#2563eb',
+                      }}
+                    >
+                      Privacy Policy
+                    </strong>{' '}
+                    and I agree to it.
                   </span>
                 </label>
 
+                {/* Submit */}
                 <button
                   type="submit"
                   className="submit-btn"
                   disabled={booking}
                 >
-                  {booking ? 'Requesting Appointment...' : '➤  Request Appointment'}
+                  {booking
+                    ? 'Requesting Appointment...'
+                    : '➤  Request Appointment'}
                 </button>
               </form>
             </>
           ) : (
             <div className="success-card">
               <div className="success-icon">
-                <Icon type="check" size={32} />
+                <Icon
+                  type="check"
+                  size={32}
+                />
               </div>
 
               <h1 className="text-2xl font-bold text-slate-800 mb-2">
@@ -704,15 +863,20 @@ const AppointmentPage = () => {
               </h1>
 
               <p className="text-slate-500 mb-6">
-                {success.patient_name || fullName} with{' '}
-                {success.doctor_name || selectedDoctor?.name} on {aptDate} at {aptTime}.
+                {success.patient_name ||
+                  fullName}{' '}
+                with{' '}
+                {success.doctor_name ||
+                  selectedDoctor?.name}{' '}
+                on {aptDate} at {aptTime}.
               </p>
 
               <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-left mb-6">
                 <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">
                   Appointment ID
                 </div>
-                <div className="font-bold text-slate-700">
+
+                <div className="font-bold text-slate-700 break-all">
                   {success.id}
                 </div>
               </div>
